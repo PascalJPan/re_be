@@ -1,0 +1,197 @@
+================================================================================
+  PIPELINE TRACE — COMMENT
+  ID: 22072f240b09  |  User: pascal  |  2026-02-08T10:13:46.768296
+================================================================================
+
+================================================================================
+ STEP 1: COLOR DERIVATION
+================================================================================
+
+Input hex: #5de817
+
+{
+  "hex": "#5de817",
+  "hue_category": "cool_green",
+  "saturation": 0.82,
+  "lightness": 0.5
+}
+
+================================================================================
+ STEP 2: IMAGE ANALYSIS (OpenAI Vision → gpt-5.2)
+================================================================================
+
+Input: user-uploaded image (binary)
+
+Output (ImageAnalysis):
+{
+  "scene_description": "A close, slightly tilted indoor snapshot catches a person leaning toward the camera in a soft gray hoodie, their face lit by cool, diffuse overhead light. The shallow depth and tight framing make the foreground feel intimate and immediate, while the background recedes into muted classroom-like geometry\u2014tables, a pale ceiling grid, and a quiet corner of objects.",
+  "detected_objects": [
+    "person",
+    "gray hoodie (fleece/cotton)",
+    "dark neck gaiter or scarf",
+    "ceiling tiles/grid",
+    "fluorescent or LED overhead lighting",
+    "tables/desks (laminate)",
+    "small container or bottle on a surface",
+    "wall or partition (painted)"
+  ],
+  "vibe": "cool fluorescent hush, soft-fabric closeness, matte gray calm, candid off-angle intimacy",
+  "emotion": "gentle self-conscious warmth threaded with quiet curiosity",
+  "dominant_colors": [
+    "heather gray",
+    "cool off-white",
+    "muted slate blue-gray",
+    "soft skin peach",
+    "charcoal black"
+  ],
+  "environment": "indoor",
+  "time_of_day": "null",
+  "location_hint": "A classroom or office-like room with ceiling tiles and shared tables",
+  "ambient_sound_associations": [
+    "low fluorescent light hum",
+    "soft hoodie fabric rustle as someone leans in",
+    "chair legs faintly scraping on a hard floor",
+    "distant muffled voices through a hallway",
+    "a pen tapping lightly on laminate",
+    "HVAC vent breathing with intermittent clicks",
+    "a phone camera shutter or subtle autofocus whirr"
+  ],
+  "sonic_metaphor": "Like a close-mic\u2019d whisper wrapped in fleece, floating under a steady fluorescent drone."
+}
+
+================================================================================
+ STEP 3: SQUIGGLE FEATURE EXTRACTION
+================================================================================
+
+Output (SquiggleFeatures):
+{
+  "total_length": 0.121565,
+  "bounding_box_area": 0.004297,
+  "average_speed": 0.000151,
+  "speed_variance": 0.0,
+  "point_count": 48
+}
+
+================================================================================
+ PARENT POST AUDIO OBJECT (inherited bpm/key/duration)
+================================================================================
+
+{
+  "audio_type": "music",
+  "mood": {
+    "primary": "playful",
+    "secondary": "sunlit"
+  },
+  "energy": 0.68,
+  "tempo": "medium",
+  "density": "medium",
+  "texture": [
+    "bouncy shuffle groove",
+    "bright percussive ticks",
+    "warm melodic stabs",
+    "airy background pad"
+  ],
+  "sound_references": [
+    "light dog panting as rhythmic breath layer",
+    "subtle collar tag jingle as occasional sparkle",
+    "soft grass scuff foley tucked under the beat",
+    "distant birds as faint high ambience"
+  ],
+  "duration_seconds": 18,
+  "bpm": 124,
+  "musical_key": "D minor",
+  "relation_to_parent": "original",
+  "confidence": 0.84,
+  "instruments": [
+    "Rhodes piano",
+    "muted trumpet",
+    "brushed snare kit",
+    "electric bass"
+  ],
+  "genre_hint": "nu-jazz groove",
+  "harmonic_mood": "brightly suspended with quick resolving turns",
+  "dynamic_shape": "quick lift-in, steady bounce, small mid-clip push, clean button ending",
+  "sonic_palette": "cool-leaning glossy mix with warm brass highlights, tight room reverb, crisp transients"
+}
+
+================================================================================
+ STEP 4: AUDIO STRUCTURED OBJECT (OpenAI → gpt-5.2)
+================================================================================
+
+Input: ImageAnalysis + ColorInput + SquiggleFeatures + parent AudioStructuredObject
+
+Output (AudioStructuredObject):
+{
+  "audio_type": "music",
+  "mood": {
+    "primary": "intimate",
+    "secondary": "curious"
+  },
+  "energy": 0.52,
+  "tempo": "medium",
+  "density": "sparse",
+  "texture": [
+    "close-mic breathy lead fragments",
+    "soft fabric-foley swishes as micro-percussion",
+    "steady fluorescent-hum drone bed",
+    "tight, dry room reverb with occasional gated tails"
+  ],
+  "sound_references": [
+    "low fluorescent light hum",
+    "hoodie fabric rustle",
+    "pen tapping on laminate",
+    "distant muffled hallway voices"
+  ],
+  "duration_seconds": 18,
+  "bpm": 124,
+  "musical_key": "D minor",
+  "relation_to_parent": "variation",
+  "confidence": 0.77,
+  "instruments": [
+    "Rhodes piano",
+    "vibraphone",
+    "808 rimshot",
+    "sub bass synth"
+  ],
+  "genre_hint": "minimal nu-jazz / downtempo",
+  "harmonic_mood": "suspended and slightly shy, resolving in small half-steps",
+  "dynamic_shape": "soft fade-in on drone, groove clicks in, brief mid-clip lift with brighter hits, then quick hush-out",
+  "sonic_palette": "cool, clean fluorescent sheen with organic foley detail and a neon-green sparkle on the highs"
+}
+
+================================================================================
+ STEP 5: COMPILED PROMPT (deterministic logic)
+================================================================================
+
+Input: AudioStructuredObject + ColorInput + ImageAnalysis + SquiggleFeatures
+
+Output (prompt string sent to ElevenLabs):
+
+  "Instrumental music track. Genre: minimal nu-jazz / downtempo. Scene: A close, slightly tilted indoor snapshot catches a person leaning toward the camera in a soft gray hoodie, their face lit by cool, diffuse overhead light. The shallow depth and tight framing make the foreground feel intimate and immediate, while the background recedes into muted classroom-like geometry—tables, a pale ceiling grid, and a quiet corner of objects.. Vibe: cool fluorescent hush, soft-fabric closeness, matte gray calm, candid off-angle intimacy. Setting: null indoor. Sounds like: Like a close-mic’d whisper wrapped in fleece, floating under a steady fluorescent drone.. Driving and pulsing, intimate and curious mood with a organic and verdant, vivid tonal palette, close-mic breathy lead fragments, soft fabric-foley swishes as micro-percussion, steady fluorescent-hum drone bed, tight, dry room reverb with occasional gated tails textures, and sustained pads and slow drones with focused simplicity. Instruments: Rhodes piano, vibraphone, 808 rimshot, sub bass synth. Timbre: cool, clean fluorescent sheen with organic foley detail and a neon-green sparkle on the highs. Harmonic feel: suspended and slightly shy, resolving in small half-steps. Dynamic shape: soft fade-in on drone, groove clicks in, brief mid-clip lift with brighter hits, then quick hush-out. Drawing from: low fluorescent light hum, hoodie fabric rustle, pen tapping on laminate, distant muffled hallway voices. Make it musically engaging with clear rhythm and forward momentum. 124 BPM, in D minor, medium tempo, sparse density, 18 seconds long. Instrumental only, no vocals, no lyrics."
+
+================================================================================
+ STEP 6: ELEVENLABS COMPOSITION PLAN (/v1/music/plan)
+================================================================================
+
+Request payload:
+{
+  "prompt": "Instrumental music track. Genre: minimal nu-jazz / downtempo. Scene: A close, slightly tilted indoor snapshot catches a person leaning toward the camera in a soft gray hoodie, their face lit by cool, diffuse overhead light. The shallow depth and tight framing make the foreground feel intimate and immediate, while the background recedes into muted classroom-like geometry\u2014tables, a pale ceiling grid, and a quiet corner of objects.. Vibe: cool fluorescent hush, soft-fabric closeness, matte gray calm, candid off-angle intimacy. Setting: null indoor. Sounds like: Like a close-mic\u2019d whisper wrapped in fleece, floating under a steady fluorescent drone.. Driving and pulsing, intimate and curious mood with a organic and verdant, vivid tonal palette, close-mic breathy lead fragments, soft fabric-foley swishes as micro-percussion, steady fluorescent-hum drone bed, tight, dry room reverb with occasional gated tails textures, and sustained pads and slow drones with focused simplicity. Instruments: Rhodes piano, vibraphone, 808 rimshot, sub bass synth. Timbre: cool, clean fluorescent sheen with organic foley detail and a neon-green sparkle on the highs. Harmonic feel: suspended and slightly shy, resolving in small half-steps. Dynamic shape: soft fade-in on drone, groove clicks in, brief mid-clip lift with brighter hits, then quick hush-out. Drawing from: low fluorescent light hum, hoodie fabric rustle, pen tapping on laminate, distant muffled hallway voices. Make it musically engaging with clear rhythm and forward momentum. 124 BPM, in D minor, medium tempo, sparse density, 18 seconds long. Instrumental only, no vocals, no lyrics.",
+  "music_length_ms": 18000,
+  "prompt_influence": 0.85,
+  "force_instrumental": true
+}
+
+Response: composition_plan JSON (opaque, passed to next step)
+
+================================================================================
+ STEP 7: ELEVENLABS AUDIO GENERATION (/v1/music)
+================================================================================
+
+Request: { composition_plan: <from previous step>, output_format: "mp3" }
+
+Output: 22072f240b09.mp3
+Saved to: backend/audio_files/22072f240b09.mp3
+
+================================================================================
+  TRACE COMPLETE — 22072f240b09.mp3
+================================================================================

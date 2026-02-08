@@ -1,4 +1,8 @@
-const API_BASE = '/api';
+// Derive base so fetch URLs resolve relative to the page origin.
+// Hash routing keeps location.pathname constant, e.g. "/creations/re_be/"
+// in production and "/" in local dev — both work.
+const _base = window.location.pathname.replace(/\/?$/, '/');
+const API_BASE = `${_base}api`;
 
 async function request(url, options = {}) {
   const res = await fetch(url, options);
@@ -19,6 +23,10 @@ export async function getPost(id) {
   return request(`${API_BASE}/posts/${id}`);
 }
 
+export async function getPostStatus(id) {
+  return request(`${API_BASE}/posts/${id}/status`);
+}
+
 export async function createPost(imageFile, colorHex, squigglePoints) {
   const form = new FormData();
   form.append('image', imageFile);
@@ -35,6 +43,10 @@ export async function deletePost(id) {
   return request(`${API_BASE}/posts/${id}`, {
     method: 'DELETE',
   });
+}
+
+export async function recreatePost(id) {
+  return request(`${API_BASE}/posts/${id}/recreate`, { method: 'POST' });
 }
 
 // Comments

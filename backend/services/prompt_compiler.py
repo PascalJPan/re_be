@@ -40,12 +40,12 @@ def compile_prompt(
         color_tone += ", dark"
 
     # --- Squiggle → rhythmic character ---
-    if squiggle.average_speed > 0.005:
+    if squiggle.average_speed > 0.003:
         if squiggle.speed_variance > 0.00002:
             rhythm_desc = "erratic, percussive rhythms"
         else:
             rhythm_desc = "driving, steady rhythms"
-    elif squiggle.average_speed < 0.001:
+    elif squiggle.average_speed < 0.0005:
         rhythm_desc = "sustained pads and slow drones"
     else:
         rhythm_desc = "flowing, melodic phrases"
@@ -55,16 +55,15 @@ def compile_prompt(
     elif squiggle.total_length < 0.5:
         rhythm_desc += " with focused simplicity"
 
-    # --- Energy → expressive descriptor ---
-    energy = obj.energy
-    if energy < 0.15:
-        energy_desc = "barely breathing"
-    elif energy < 0.3:
-        energy_desc = "gently simmering"
-    elif energy < 0.5:
-        energy_desc = "quietly building"
+    # --- Energy → expressive descriptor (with upward compression) ---
+    raw_energy = obj.energy
+    energy = 0.3 + raw_energy * 0.7  # maps [0,1] → [0.3, 1.0]
+    if energy < 0.4:
+        energy_desc = "steadily grooving"
+    elif energy < 0.55:
+        energy_desc = "building momentum"
     elif energy < 0.7:
-        energy_desc = "warmly pulsing"
+        energy_desc = "driving and pulsing"
     elif energy < 0.85:
         energy_desc = "intensely surging"
     else:
@@ -118,7 +117,7 @@ def compile_prompt(
     prompt += (
         f"{energy_desc.capitalize()}, {mood_str} mood "
         f"with a {color_tone} tonal palette, "
-        #f"{texture_str} textures, and {rhythm_desc}. " #not needed right now do not put back in unless asked
+        f"{texture_str} textures, and {rhythm_desc}. "
     )
 
     # Instruments
@@ -139,6 +138,9 @@ def compile_prompt(
 
     # Sound references
     prompt += f"Drawing from: {refs_str}. "
+
+    # Engagement push
+    prompt += "Make it musically engaging with clear rhythm and forward momentum. "
 
     # Strict constraints
     prompt += (

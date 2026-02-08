@@ -51,6 +51,11 @@ MAPPING RULES (priority order):
    - Only purely still, meditative, environmental scenes → "ambient"
    - When in doubt, default to "music"
 
+ENERGY BIAS: This is for a social media app — audio must be engaging and sonically
+interesting, never boring or flat. Even quiet scenes should have musical movement,
+rhythm, and presence. Avoid energy below 0.3. Prefer medium-to-fast tempos and
+medium-to-dense arrangements. When in doubt, push energy and tempo upward.
+
 2. COLOR (high priority):
    - warm_red, warm_orange, warm_magenta → warmer mood tones, bold textures
    - cool_blue, cool_cyan, cool_purple → cooler mood tones, smoother textures
@@ -62,17 +67,17 @@ MAPPING RULES (priority order):
    - Low lightness → darker, deeper sound
 
 3. SQUIGGLE FEATURES (fine-grained):
-   - average_speed HIGH (>0.005) → higher energy, tempo="fast"
-   - average_speed LOW (<0.001) → lower energy, tempo="slow"
+   - average_speed HIGH (>0.003) → higher energy, tempo="fast"
+   - average_speed LOW (<0.0005) → lower energy, tempo="slow"
    - bounding_box_area HIGH (>0.2) → density="dense"
    - bounding_box_area LOW (<0.05) → density="sparse"
    - speed_variance HIGH → more varied texture list
    - total_length HIGH (>2.0) → more complex/layered textures
    - total_length LOW (<0.5) → simpler, focused textures
 
-4. DURATION: Simple scenes → 15s. Complex emotional scenes → 20s.
+4. DURATION: Default to 18s. Only use 15s for very minimal scenes, 20s for complex emotional scenes.
 
-5. BPM: Map from tempo — slow→60-90, medium→90-130, fast→130-180. Pick a specific integer.
+5. BPM: Map from tempo — slow→85-105, medium→105-140, fast→140-180. Pick a specific integer.
 
 6. MUSICAL KEY: Choose based on mood and color. Warm/happy → major keys (C, G, D, A major). Cool/melancholic → minor keys (A, D, E, B minor). Mysterious/dark → Eb minor, F# minor. Bright/energetic → E major, Bb major.
 
@@ -126,14 +131,15 @@ async def generate_audio_object(
     for attempt in range(2):
         try:
             response = await client.chat.completions.create(
-                model=settings.openai_model,
-                temperature=0.4,
+                model=settings.openai_fast_model,
+                temperature=0.6,
                 response_format={"type": "json_object"},
                 messages=[
                     {"role": "system", "content": system},
                     {"role": "user", "content": json.dumps(user_content)},
                 ],
                 max_completion_tokens=1024,
+                timeout=30.0,
             )
             raw = response.choices[0].message.content
             data = json.loads(raw)

@@ -30,7 +30,8 @@ async def get_profile(username: str, page: int = Query(1, ge=1), per_page: int =
 
     rows = await db.execute_fetchall(
         """SELECT p.id, p.audio_filename, p.color_hex, p.created_at,
-           (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count
+           (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count,
+           p.status
            FROM posts p WHERE p.user_id = ?
            ORDER BY p.created_at DESC LIMIT ? OFFSET ?""",
         (user_id, per_page, offset),
@@ -40,11 +41,12 @@ async def get_profile(username: str, page: int = Query(1, ge=1), per_page: int =
         PostSummary(
             id=r[0],
             username=actual_username,
-            image_url=f"/api/posts/{r[0]}/image",
-            audio_url=f"/api/audio/{r[1]}",
+            image_url=f"api/posts/{r[0]}/image",
+            audio_url=f"api/audio/{r[1]}" if r[1] else "",
             color_hex=r[2],
             created_at=r[3],
             comment_count=r[4],
+            status=r[5],
         )
         for r in rows
     ]

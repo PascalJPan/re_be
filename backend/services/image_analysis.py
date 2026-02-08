@@ -60,6 +60,7 @@ async def analyze_image(image_bytes: bytes, content_type: str = "image/jpeg") ->
                     },
                 ],
                 max_completion_tokens=1024,
+                timeout=30.0,
             )
             raw = response.choices[0].message.content
             data = json.loads(raw)

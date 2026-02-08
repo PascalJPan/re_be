@@ -41,13 +41,7 @@ function updateNav() {
   `;
 
   nav.querySelector('.nav-create-btn').addEventListener('click', () => {
-    openCreateOverlay(null, () => {
-      if (window.location.hash === '#/feed') {
-        feed.render(app);
-      } else {
-        router.navigate('/feed');
-      }
-    });
+    openCreateOverlay(null);
   });
 }
 
@@ -61,7 +55,7 @@ router.addRoute('/post/:id', (params) => {
 });
 
 router.addRoute('/profile/:username', (params) => {
-  profile.render(app, params.username);
+  return profile.render(app, params.username);
 });
 
 // --- Init ---

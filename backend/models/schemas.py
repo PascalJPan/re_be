@@ -99,7 +99,7 @@ class AudioStructuredObject(BaseModel):
     texture: List[str]
     sound_references: List[str]
     duration_seconds: int = Field(ge=15, le=20)
-    bpm: Optional[int] = Field(default=None, ge=60, le=180)
+    bpm: Optional[int] = Field(default=None, ge=30, le=300)
     musical_key: Optional[str] = Field(default=None)
     relation_to_parent: Literal["original", "mirror", "variation", "contrast"]
     confidence: float = Field(ge=0.0, le=1.0)
@@ -142,6 +142,7 @@ class PostSummary(BaseModel):
     color_hex: str
     comment_count: int
     created_at: str
+    status: str = "ready"
 
 
 class FeedResponse(BaseModel):
@@ -157,14 +158,15 @@ class PostDetail(BaseModel):
     image_url: str
     audio_url: str
     color_hex: str
-    structured_object: AudioStructuredObject
-    image_analysis: ImageAnalysis
-    squiggle_features: SquiggleFeatures
+    structured_object: Optional[AudioStructuredObject] = None
+    image_analysis: Optional[ImageAnalysis] = None
+    squiggle_features: Optional[SquiggleFeatures] = None
     compiled_prompt: str = ""
     enhancement_prompt: Optional[ImageEnhancementPrompt] = None
     morph_status: Optional[str] = None
     comments: List["CommentDetail"] = []
     created_at: str
+    status: str = "ready"
 
 
 class CommentDetail(BaseModel):
@@ -193,3 +195,16 @@ class ProfileResponse(BaseModel):
     total: int
     page: int
     pages: int
+
+
+class PostCreateAsyncResponse(BaseModel):
+    id: str
+    status: str
+    color_hex: str
+    created_at: str
+
+
+class PostStatusResponse(BaseModel):
+    id: str
+    status: str
+    error_message: str = ""

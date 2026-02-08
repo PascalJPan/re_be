@@ -1,0 +1,183 @@
+================================================================================
+  PIPELINE TRACE — POST
+  ID: 0a14ec93892e  |  User: pascal  |  2026-02-08T11:11:45.143358
+================================================================================
+
+================================================================================
+ STEP 1: COLOR DERIVATION
+================================================================================
+
+Input hex: #4035ca
+
+{
+  "hex": "#4035ca",
+  "hue_category": "cool_blue",
+  "saturation": 0.584,
+  "lightness": 0.5
+}
+
+================================================================================
+ STEP 2: IMAGE ANALYSIS (OpenAI Vision → gpt-5.2)
+================================================================================
+
+Input: user-uploaded image (binary)
+
+Output (ImageAnalysis):
+{
+  "scene_description": "A dark-themed code editor fills the frame, its left sidebar a stacked tree of folders while the main pane glows with neatly indented JavaScript imports and constants. Cool monitor light pools across the screen like a thin blue haze, with crisp vertical gutters and tabs creating a layered sense of depth from navigation to code to minimap.",
+  "detected_objects": [
+    "code editor interface",
+    "file explorer sidebar",
+    "tabs bar",
+    "JavaScript source code",
+    "syntax highlighting",
+    "line numbers",
+    "minimap scrollbar",
+    "project folders (backend/frontend)",
+    "Python files",
+    "CSS files",
+    "terminal/status indicators",
+    "dark UI theme"
+  ],
+  "vibe": "cool phosphor hush, graphite-dry precision, neon-edged focus, midnight-caffeinated stillness",
+  "emotion": "methodical concentration with a faint undercurrent of deadline pressure",
+  "dominant_colors": [
+    "charcoal black UI",
+    "slate gray panels",
+    "cool cyan-blue highlights",
+    "mint-green syntax accents",
+    "soft lavender/purple tokens",
+    "warm amber warning dots"
+  ],
+  "environment": "indoor",
+  "time_of_day": "night",
+  "location_hint": "a developer workstation with a code editor open to a web app project",
+  "ambient_sound_associations": [
+    "mechanical keyboard clacks in short bursts",
+    "trackpad clicks and soft scrolling ticks",
+    "computer fan whir rising and falling",
+    "a faint electrical monitor hum",
+    "notification ping muted to a dull chime",
+    "chair fabric shifting with a small creak",
+    "distant HVAC airflow through a vent"
+  ],
+  "sonic_metaphor": "A tight hi-hat pattern made of keystrokes, riding on a low fan-drone bassline, like logic assembling itself in the dark."
+}
+
+================================================================================
+ STEP 3: SQUIGGLE FEATURE EXTRACTION
+================================================================================
+
+Output (SquiggleFeatures):
+{
+  "total_length": 0.830309,
+  "bounding_box_area": 0.100764,
+  "average_speed": 0.000612,
+  "speed_variance": 1e-06,
+  "point_count": 83
+}
+
+================================================================================
+ STEP 4: IMAGE ENHANCEMENT PROMPT (OpenAI → gpt-5.2)
+================================================================================
+
+Input: ImageAnalysis + ColorInput + SquiggleFeatures
+
+Output (ImageEnhancementPrompt):
+{
+  "emotional_intent": "Transform the meticulous coding environment into a surreal, glitch-infused digital dreamscape that blurs the line between order and chaos.",
+  "visual_directive": "Dissolve the code editor into a fractured collage of pixelated shards and vibrant glitch distortions with pulsating neon overlays and jagged spectral edges.",
+  "morphing_prompt": "Create a bold, layered scene where the structured code interface shatters into a chaotic mosaic of fragmented screens, luminous raster lines, and distorted geometric shapes. Incorporate glitch effects like pixel scatter, color aberration, and scan line glitches, while amplifying the cool cyan-blue highlights into electric neon flickers. Render the scene with a cyber-futuristic, rave-inspired aesthetic, infusing the orderly environment with chaotic digital energy that still hints at the original structure's recognizable features.",
+  "style_reference": "Cyberpunk digital glitch art with neon rave aesthetics"
+}
+
+================================================================================
+ STEP 5: IMAGE MORPHING (OpenAI → gpt-image-1)
+================================================================================
+
+Input image: original + color overlay (Pillow)
+Prompt sent to gpt-image-1:
+
+  "Create a bold, layered scene where the structured code interface shatters into a chaotic mosaic of fragmented screens, luminous raster lines, and distorted geometric shapes. Incorporate glitch effects like pixel scatter, color aberration, and scan line glitches, while amplifying the cool cyan-blue highlights into electric neon flickers. Render the scene with a cyber-futuristic, rave-inspired aesthetic, infusing the orderly environment with chaotic digital energy that still hints at the original structure's recognizable features."
+
+Output: morphed image bytes (stored as post image) — SUCCESS
+
+================================================================================
+ STEP 6: AUDIO STRUCTURED OBJECT (OpenAI → gpt-5.2)
+================================================================================
+
+Input: ImageAnalysis + ColorInput + SquiggleFeatures
+
+Output (AudioStructuredObject):
+{
+  "audio_type": "music",
+  "mood": {
+    "primary": "focused",
+    "secondary": "calm"
+  },
+  "energy": 0.65,
+  "tempo": "medium",
+  "density": "medium",
+  "texture": [
+    "clean",
+    "precise",
+    "digital"
+  ],
+  "sound_references": [
+    "synth pad",
+    "electronic bass",
+    "light hi-hat"
+  ],
+  "duration_seconds": 18,
+  "bpm": 120,
+  "musical_key": "A minor",
+  "relation_to_parent": "original",
+  "confidence": 0.9,
+  "instruments": [
+    "digital synth pad",
+    "electric bass",
+    "closed hi-hat",
+    "modular arpeggiator"
+  ],
+  "genre_hint": "ambient techno",
+  "harmonic_mood": "suspended",
+  "dynamic_shape": "slow build with steady movement",
+  "sonic_palette": "crystalline digital, cool-toned, sleek"
+}
+
+================================================================================
+ STEP 7: COMPILED PROMPT (deterministic logic)
+================================================================================
+
+Input: AudioStructuredObject + ColorInput + ImageAnalysis + SquiggleFeatures
+
+Output (prompt string sent to ElevenLabs):
+
+  "Instrumental music track. Genre: ambient techno. Scene: A dark-themed code editor fills the frame, its left sidebar a stacked tree of folders while the main pane glows with neatly indented JavaScript imports and constants. Cool monitor light pools across the screen like a thin blue haze, with crisp vertical gutters and tabs creating a layered sense of depth from navigation to code to minimap.. Vibe: cool phosphor hush, graphite-dry precision, neon-edged focus, midnight-caffeinated stillness. Setting: night indoor. Sounds like: A tight hi-hat pattern made of keystrokes, riding on a low fan-drone bassline, like logic assembling itself in the dark.. Intensely surging, focused and calm mood with a cool and ethereal tonal palette, clean, precise, digital textures, and flowing, melodic phrases. Instruments: digital synth pad, electric bass, closed hi-hat, modular arpeggiator. Timbre: crystalline digital, cool-toned, sleek. Harmonic feel: suspended. Dynamic shape: slow build with steady movement. Drawing from: synth pad, electronic bass, light hi-hat. Make it musically engaging with clear rhythm and forward momentum. 120 BPM, in A minor, medium tempo, medium density, 18 seconds long. Instrumental only, no vocals, no lyrics."
+
+================================================================================
+ STEP 8: ELEVENLABS COMPOSITION PLAN (/v1/music/plan)
+================================================================================
+
+Request payload:
+{
+  "prompt": "Instrumental music track. Genre: ambient techno. Scene: A dark-themed code editor fills the frame, its left sidebar a stacked tree of folders while the main pane glows with neatly indented JavaScript imports and constants. Cool monitor light pools across the screen like a thin blue haze, with crisp vertical gutters and tabs creating a layered sense of depth from navigation to code to minimap.. Vibe: cool phosphor hush, graphite-dry precision, neon-edged focus, midnight-caffeinated stillness. Setting: night indoor. Sounds like: A tight hi-hat pattern made of keystrokes, riding on a low fan-drone bassline, like logic assembling itself in the dark.. Intensely surging, focused and calm mood with a cool and ethereal tonal palette, clean, precise, digital textures, and flowing, melodic phrases. Instruments: digital synth pad, electric bass, closed hi-hat, modular arpeggiator. Timbre: crystalline digital, cool-toned, sleek. Harmonic feel: suspended. Dynamic shape: slow build with steady movement. Drawing from: synth pad, electronic bass, light hi-hat. Make it musically engaging with clear rhythm and forward momentum. 120 BPM, in A minor, medium tempo, medium density, 18 seconds long. Instrumental only, no vocals, no lyrics.",
+  "music_length_ms": 18000,
+  "prompt_influence": 0.85,
+  "force_instrumental": true
+}
+
+Response: composition_plan JSON (opaque, passed to next step)
+
+================================================================================
+ STEP 9: ELEVENLABS AUDIO GENERATION (/v1/music)
+================================================================================
+
+Request: { composition_plan: <from previous step>, output_format: "mp3" }
+
+Output: 0a14ec93892e.mp3
+Saved to: backend/audio_files/0a14ec93892e.mp3
+
+================================================================================
+  TRACE COMPLETE — 0a14ec93892e.mp3
+================================================================================

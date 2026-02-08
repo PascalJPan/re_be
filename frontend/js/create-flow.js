@@ -1,8 +1,10 @@
 import * as api from './api.js';
 import * as audioPlayer from './audio-player.js';
+import { safePlay } from './audio-player.js';
 import { sampleColor } from './pixel-sampler.js';
 import { toast } from './ui.js';
 import { navigate } from './router.js';
+import { addGeneratingPost } from './generation-tracker.js';
 
 const MAX_DIMENSION = 1024;
 
@@ -15,17 +17,18 @@ let points = [];
 let drawing = false;
 let startTime = 0;
 let derivedColor = '#888888';
-let postId = null;   // set after generation
 let commentPostId = null;  // non-null when creating a comment
+let submitting = false;
 
 /**
  * Open creation overlay.
  * @param {string|null} parentPostId - if non-null, creating a comment on this post
- * @param {function|null} onDone - callback after publish
+ * @param {function|null} onDone - callback after comment publish (ignored for posts)
  */
 export function openCreateOverlay(parentPostId = null, onDone = null) {
   audioPlayer.clearPlayers();
   commentPostId = parentPostId;
+  submitting = false;
 
   overlay = document.createElement('div');
   overlay.className = 'create-overlay';
@@ -43,21 +46,29 @@ export function openCreateOverlay(parentPostId = null, onDone = null) {
           <canvas class="create-squiggle-canvas"></canvas>
         </div>
         <div class="create-upload-prompt">
-          <button class="create-pick-btn">Choose Image</button>
-          <button class="create-camera-btn">Camera</button>
+          <div class="create-pick-btn" role="button" tabindex="0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+              <circle cx="8.5" cy="8.5" r="1.5"/>
+              <path d="M21 15l-5-5L5 21"/>
+            </svg>
+          </div>
+          <div class="create-upload-divider"></div>
+          <div class="create-camera-btn" role="button" tabindex="0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+            </svg>
+          </div>
           <input type="file" class="create-file-input" accept="image/*" style="display:none">
           <input type="file" class="create-camera-input" accept="image/*" capture="environment" style="display:none">
         </div>
       </div>
       <div class="create-bottom-bar" style="display:none">
         <div class="create-color-preview"></div>
-        <button class="create-generate-btn primary">Generate</button>
       </div>
       <div class="create-result" style="display:none">
         <div class="create-result-audio"></div>
-        <div class="create-result-actions">
-          <button class="create-publish-btn primary" title="Publish">\u2192</button>
-        </div>
       </div>
       <div class="create-loading" style="display:none">Generating...</div>
     </div>
@@ -77,8 +88,6 @@ function setupOverlayEvents(onDone) {
   const pickBtn = overlay.querySelector('.create-pick-btn');
   const cameraBtn = overlay.querySelector('.create-camera-btn');
   const closeBtn = overlay.querySelector('.create-close-btn');
-  const generateBtn = overlay.querySelector('.create-generate-btn');
-  const publishBtn = overlay.querySelector('.create-publish-btn');
   const uploadPrompt = overlay.querySelector('.create-upload-prompt');
   const bottomBar = overlay.querySelector('.create-bottom-bar');
   const colorPreview = overlay.querySelector('.create-color-preview');
@@ -105,88 +114,69 @@ function setupOverlayEvents(onDone) {
   squiggleCanvas.addEventListener('pointermove', onPointerMove);
   squiggleCanvas.addEventListener('pointerup', () => {
     drawing = false;
-    if (points.length >= 2) {
+    if (points.length >= 2 && currentFile && !submitting) {
       derivedColor = sampleColor(points);
       colorPreview.style.background = derivedColor;
       overlay.querySelector('.create-color-overlay').style.background = derivedColor;
+
+      // Auto-submit on squiggle release
+      autoSubmit(onDone);
     }
   });
   squiggleCanvas.addEventListener('pointerleave', () => { drawing = false; });
 
-  // Generate
-  generateBtn.addEventListener('click', async () => {
-    if (!currentFile) { toast('Pick an image first', true); return; }
-    if (points.length < 2) { toast('Draw a squiggle on the image', true); return; }
+  // Close
+  closeBtn.addEventListener('click', () => {
+    closeOverlay();
+  });
+}
 
+async function autoSubmit(onDone) {
+  if (submitting) return;
+  submitting = true;
+
+  if (commentPostId) {
+    // Comments stay synchronous — need parent's structured_object
     overlay.querySelector('.create-loading').style.display = '';
-    bottomBar.style.display = 'none';
+    overlay.querySelector('.create-bottom-bar').style.display = 'none';
 
     try {
-      let data;
-      if (commentPostId) {
-        data = await api.createComment(commentPostId, currentFile, derivedColor, points);
-        postId = data.comment.id;
-      } else {
-        data = await api.createPost(currentFile, derivedColor, points);
-        postId = data.post.id;
-      }
+      const data = await api.createComment(commentPostId, currentFile, derivedColor, points);
+      const item = data.comment;
 
-      const item = commentPostId ? data.comment : data.post;
       console.groupCollapsed(`[Generation] ${item.id}`);
       console.log('image_analysis:', item.image_analysis);
       console.log('squiggle_features:', item.squiggle_features);
       console.log('structured_object:', item.structured_object);
       console.log('compiled_prompt:', item.compiled_prompt);
-      if (item.morph_status) console.log('morph_status:', item.morph_status);
       console.groupEnd();
 
-      if (item.morph_status && item.morph_status.startsWith('failed:')) {
-        toast('Image morph failed — using original image', true);
-      }
-
-      overlay.querySelector('.create-loading').style.display = 'none';
-      const resultDiv = overlay.querySelector('.create-result');
-      resultDiv.style.display = '';
-
-      const audioContainer = overlay.querySelector('.create-result-audio');
-      const audioEl = commentPostId
-        ? audioPlayer.createPlayer(data.comment.audio_url, audioContainer, derivedColor)
-        : audioPlayer.createPlayer(data.post.audio_url, audioContainer, derivedColor);
-      audioEl.play().catch(() => {});
-
-      // Apply color glow to canvas area
-      overlay.querySelector('.create-canvas-area').style.boxShadow =
-        `0 0 60px ${derivedColor}40, inset 0 0 30px ${derivedColor}20`;
-
+      closeOverlay();
+      if (onDone) onDone(item.id);
     } catch (e) {
-      overlay.querySelector('.create-loading').style.display = 'none';
-      bottomBar.style.display = '';
+      submitting = false;
+      if (overlay) {
+        overlay.querySelector('.create-loading').style.display = 'none';
+        overlay.querySelector('.create-bottom-bar').style.display = '';
+      }
       toast(e.message, true);
     }
-  });
+  } else {
+    // Posts are async — close overlay immediately
+    try {
+      const data = await api.createPost(currentFile, derivedColor, points);
+      const postId = data.id;
+      const colorHex = data.color_hex;
 
-  // Publish
-  publishBtn.addEventListener('click', () => {
-    const id = postId;
-    closeOverlay();
-    if (onDone) {
-      onDone(id);
-    } else {
+      addGeneratingPost(postId, colorHex);
+      closeOverlay();
       navigate('/feed');
+    } catch (e) {
+      submitting = false;
+      toast(e.message, true);
+      closeOverlay();
     }
-  });
-
-  // Close
-  closeBtn.addEventListener('click', () => {
-    if (postId) {
-      if (commentPostId) {
-        api.deleteComment(commentPostId, postId).catch(() => {});
-      } else {
-        api.deletePost(postId).catch(() => {});
-      }
-    }
-    closeOverlay();
-  });
+  }
 }
 
 function loadImageToCanvas(file, uploadPrompt, bottomBar) {
@@ -223,12 +213,13 @@ function loadImageToCanvas(file, uploadPrompt, bottomBar) {
     // Reset state
     points = [];
     derivedColor = '#888888';
-    postId = null;
+    submitting = false;
   };
   img.src = url;
 }
 
 function onPointerDown(e) {
+  if (submitting) return;
   drawing = true;
   points = [];
   startTime = Date.now();
@@ -270,8 +261,8 @@ function closeOverlay() {
   }
   currentFile = null;
   points = [];
-  postId = null;
   commentPostId = null;
+  submitting = false;
 }
 
 function openWebcam(onCapture) {

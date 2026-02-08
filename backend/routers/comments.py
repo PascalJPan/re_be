@@ -43,10 +43,13 @@ async def create_comment(
 
     # Check post exists and get parent structured_object
     post_rows = await db.execute_fetchall(
-        "SELECT structured_object FROM posts WHERE id = ?", (post_id,)
+        "SELECT structured_object, status FROM posts WHERE id = ?", (post_id,)
     )
     if not post_rows:
         raise HTTPException(status_code=404, detail="Post not found")
+
+    if post_rows[0][1] != "ready":
+        raise HTTPException(status_code=409, detail="Post is still generating")
 
     parent_object = AudioStructuredObject(**json.loads(post_rows[0][0]))
 
@@ -58,7 +61,7 @@ async def create_comment(
     try:
         raw_points = json.loads(squiggle_points)
         points = [SquigglePoint(**p) for p in raw_points]
-    except (json.JSONDecodeError, Exception) as e:
+    except (json.JSONDecodeError, TypeError, KeyError) as e:
         raise HTTPException(status_code=422, detail=f"Invalid squiggle_points: {e}")
 
     if len(points) < 2:
@@ -138,7 +141,7 @@ async def create_comment(
         comment=CommentDetail(
             id=comment_id,
             username=user["username"],
-            audio_url=f"/api/audio/{audio_filename}",
+            audio_url=f"api/audio/{audio_filename}",
             color_hex=color_hex,
             structured_object=structured_object,
             image_analysis=image_analysis,
@@ -179,7 +182,7 @@ async def list_comments(post_id: str):
         CommentDetail(
             id=r[0],
             username=r[1],
-            audio_url=f"/api/audio/{r[2]}",
+            audio_url=f"api/audio/{r[2]}",
             color_hex=r[3],
             structured_object=_parse_json(r[4], AudioStructuredObject, "comment structured_object"),
             image_analysis=_parse_json(r[5], ImageAnalysis, "comment image_analysis"),

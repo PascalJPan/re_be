@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS posts (
     id                TEXT PRIMARY KEY,
     user_id           INTEGER NOT NULL REFERENCES users(id),
     image_data        BLOB NOT NULL,
+    original_image_data BLOB,
     squiggle_points   TEXT NOT NULL,
     color_hex         TEXT NOT NULL,
     structured_object TEXT NOT NULL,
@@ -63,8 +64,30 @@ async def init_db():
     try:
         await _db.execute("ALTER TABLE posts ADD COLUMN enhancement_prompt TEXT NOT NULL DEFAULT ''")
         await _db.commit()
-    except Exception:
+    except aiosqlite.OperationalError:
         pass  # Column already exists
+
+    try:
+        await _db.execute("ALTER TABLE posts ADD COLUMN original_image_data BLOB")
+        await _db.commit()
+    except aiosqlite.OperationalError:
+        pass  # Column already exists
+
+    try:
+        await _db.execute("ALTER TABLE posts ADD COLUMN status TEXT NOT NULL DEFAULT 'ready'")
+        await _db.commit()
+    except aiosqlite.OperationalError:
+        pass  # Column already exists
+
+    try:
+        await _db.execute("ALTER TABLE posts ADD COLUMN error_message TEXT DEFAULT ''")
+        await _db.commit()
+    except aiosqlite.OperationalError:
+        pass  # Column already exists
+
+    # Recover from server restart mid-generation: mark stale generating posts as failed
+    await _db.execute("UPDATE posts SET status = 'failed', error_message = 'Server restarted during generation' WHERE status = 'generating'")
+    await _db.commit()
 
     await _db.execute(
         "INSERT OR IGNORE INTO users (id, username, password_hash) VALUES (1, 'pascal', 'demo')"

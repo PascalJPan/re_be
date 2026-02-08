@@ -23,16 +23,24 @@ export function showError(msg) {
   toast(msg, true);
 }
 
-export function toast(msg, isError = false) {
+export function toast(msg, isError = false, onClick = null) {
   const el = document.createElement('div');
   el.className = 'toast' + (isError ? ' toast-error' : '');
+  if (onClick) el.classList.add('toast-clickable');
   el.textContent = msg;
   document.body.appendChild(el);
+  if (onClick) {
+    el.addEventListener('click', () => {
+      el.classList.remove('toast-visible');
+      setTimeout(() => el.remove(), 300);
+      onClick();
+    });
+  }
   requestAnimationFrame(() => el.classList.add('toast-visible'));
   setTimeout(() => {
     el.classList.remove('toast-visible');
     setTimeout(() => el.remove(), 300);
-  }, 3000);
+  }, onClick ? 5000 : 3000);
 }
 
 export function timeAgo(isoStr) {

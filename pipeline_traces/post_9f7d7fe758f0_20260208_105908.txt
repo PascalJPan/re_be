@@ -1,0 +1,179 @@
+================================================================================
+  PIPELINE TRACE — POST
+  ID: 9f7d7fe758f0  |  User: pascal  |  2026-02-08T10:59:08.336058
+================================================================================
+
+================================================================================
+ STEP 1: COLOR DERIVATION
+================================================================================
+
+Input hex: #00ffa5
+
+{
+  "hex": "#00ffa5",
+  "hue_category": "cool_green",
+  "saturation": 1.0,
+  "lightness": 0.5
+}
+
+================================================================================
+ STEP 2: IMAGE ANALYSIS (OpenAI Vision → gpt-5.2)
+================================================================================
+
+Input: user-uploaded image (binary)
+
+Output (ImageAnalysis):
+{
+  "scene_description": "A tight, flat-lit close-up of vertical color bands\u2014blue, lime, hot pink, and green\u2014like sticky notes or a color test strip laid on a desk. The surface reads matte and papery, with shallow depth and a soft shadow at the top where a fingertip intrudes, giving the scene a tactile, handheld immediacy.",
+  "detected_objects": [
+    "colored paper strips (blue, lime, pink, green)",
+    "paper/cardstock texture",
+    "fingertip",
+    "desk or tabletop surface"
+  ],
+  "vibe": "neon-matte crispness, papery dry brightness, playful synthetic pop, close-quarters tactile immediacy",
+  "emotion": "restless creative anticipation with a hint of fidgety focus",
+  "dominant_colors": [
+    "saturated cobalt blue",
+    "acid lime yellow-green",
+    "hot magenta pink",
+    "fresh spring green",
+    "muted gray-brown tabletop"
+  ],
+  "environment": "indoor",
+  "time_of_day": "null",
+  "location_hint": "a desk or work surface, possibly an office or study area",
+  "ambient_sound_associations": [
+    "fingertip rubbing lightly on paper",
+    "sticky note edge peeling with a soft snap",
+    "paper sliding across a tabletop",
+    "a faint camera/phone handling rustle",
+    "subtle room hum from electronics",
+    "distant muffled voices through a wall",
+    "chair fabric shifting with a small creak"
+  ],
+  "sonic_metaphor": "A bright, staccato synth arpeggio clicking like paper edges being aligned under fluorescent light."
+}
+
+================================================================================
+ STEP 3: SQUIGGLE FEATURE EXTRACTION
+================================================================================
+
+Output (SquiggleFeatures):
+{
+  "total_length": 2.916607,
+  "bounding_box_area": 0.449903,
+  "average_speed": 0.005122,
+  "speed_variance": 1.3e-05,
+  "point_count": 36
+}
+
+================================================================================
+ STEP 4: IMAGE ENHANCEMENT PROMPT (OpenAI → gpt-5.2)
+================================================================================
+
+Input: ImageAnalysis + ColorInput + SquiggleFeatures
+
+Output (ImageEnhancementPrompt):
+{
+  "emotional_intent": "Turn fidgety creative anticipation into a crisp, electric lab-notebook trance\u2014orderly but buzzing with contained energy.",
+  "visual_directive": "Recast the paper color bands as a neon cyanotype-risograph hybrid with botanical micro-etching, ink misregistration, and blueprint-style measurement marks in #00ffa5.",
+  "morphing_prompt": "Transform the close-up of vertical paper strips into a high-contrast cyanotype blueprint print invaded by vivid risograph layers: push all shadows into deep Prussian blues while blasting highlights into pale paper-white, then overprint the bands with misregistered ink passes in #00ffa5 that bleed at the edges like wet screenprint. Embed fine technical drafting artifacts\u2014gridlines, crop marks, tiny calibration numbers, and halftone dot textures\u2014so the strips feel like a scientific color test gone punk, while keeping the fingertip and the paper texture clearly recognizable. Add controlled geometric warping along the strip borders (slight ripple, edge lift, micro-tears) and a subtle UV-glow fringe on high-contrast edges to make the scene hum like an engineered artifact.",
+  "style_reference": "Cyanotype blueprint print + fluorescent risograph poster aesthetics, with Bauhaus calibration graphics and print-shop misregistration"
+}
+
+================================================================================
+ STEP 5: IMAGE MORPHING (OpenAI → gpt-image-1)
+================================================================================
+
+Input image: original + color overlay (Pillow)
+Prompt sent to gpt-image-1:
+
+  "Transform the close-up of vertical paper strips into a high-contrast cyanotype blueprint print invaded by vivid risograph layers: push all shadows into deep Prussian blues while blasting highlights into pale paper-white, then overprint the bands with misregistered ink passes in #00ffa5 that bleed at the edges like wet screenprint. Embed fine technical drafting artifacts—gridlines, crop marks, tiny calibration numbers, and halftone dot textures—so the strips feel like a scientific color test gone punk, while keeping the fingertip and the paper texture clearly recognizable. Add controlled geometric warping along the strip borders (slight ripple, edge lift, micro-tears) and a subtle UV-glow fringe on high-contrast edges to make the scene hum like an engineered artifact."
+
+Output: morphed image bytes (stored as post image) — SUCCESS
+
+================================================================================
+ STEP 6: AUDIO STRUCTURED OBJECT (OpenAI → gpt-5.2)
+================================================================================
+
+Input: ImageAnalysis + ColorInput + SquiggleFeatures
+
+Output (AudioStructuredObject):
+{
+  "audio_type": "music",
+  "mood": {
+    "primary": "playful",
+    "secondary": "restlessly focused"
+  },
+  "energy": 0.82,
+  "tempo": "fast",
+  "density": "dense",
+  "texture": [
+    "staccato",
+    "clicky",
+    "glossy-synthetic",
+    "tight-gated",
+    "layered arpeggios",
+    "micro-percussive"
+  ],
+  "sound_references": [
+    "sticky note edge peel snap",
+    "fingertip rubbing on paper",
+    "paper sliding on tabletop",
+    "phone handling rustle",
+    "subtle electronics room hum"
+  ],
+  "duration_seconds": 18,
+  "bpm": 164,
+  "musical_key": "E major",
+  "relation_to_parent": "original",
+  "confidence": 0.86,
+  "instruments": [
+    "bright analog synth arpeggiator",
+    "FM pluck lead",
+    "808 kick",
+    "tight clap/snare"
+  ],
+  "genre_hint": "hyperpop",
+  "harmonic_mood": "sparkly and resolving with quick, curious turnarounds",
+  "dynamic_shape": "quick drop-in, steady forward push with small rhythmic fills, final bar filter-lift then hard stop",
+  "sonic_palette": "neon-clean digital brightness with papery clicks, short room reverb, and crisp transient focus"
+}
+
+================================================================================
+ STEP 7: COMPILED PROMPT (deterministic logic)
+================================================================================
+
+Input: AudioStructuredObject + ColorInput + ImageAnalysis + SquiggleFeatures
+
+Output (prompt string sent to ElevenLabs):
+
+  "Instrumental music track. Genre: hyperpop. Scene: A tight, flat-lit close-up of vertical color bands—blue, lime, hot pink, and green—like sticky notes or a color test strip laid on a desk. The surface reads matte and papery, with shallow depth and a soft shadow at the top where a fingertip intrudes, giving the scene a tactile, handheld immediacy.. Vibe: neon-matte crispness, papery dry brightness, playful synthetic pop, close-quarters tactile immediacy. Setting: null indoor. Sounds like: A bright, staccato synth arpeggio clicking like paper edges being aligned under fluorescent light.. Explosively energetic, playful and restlessly focused mood with a organic and verdant, vivid tonal palette, staccato, clicky, glossy-synthetic, tight-gated, layered arpeggios, micro-percussive textures, and driving, steady rhythms with layered complexity. Instruments: bright analog synth arpeggiator, FM pluck lead, 808 kick, tight clap/snare. Timbre: neon-clean digital brightness with papery clicks, short room reverb, and crisp transient focus. Harmonic feel: sparkly and resolving with quick, curious turnarounds. Dynamic shape: quick drop-in, steady forward push with small rhythmic fills, final bar filter-lift then hard stop. Drawing from: sticky note edge peel snap, fingertip rubbing on paper, paper sliding on tabletop, phone handling rustle, subtle electronics room hum. Make it musically engaging with clear rhythm and forward momentum. 164 BPM, in E major, fast tempo, dense density, 18 seconds long. Instrumental only, no vocals, no lyrics."
+
+================================================================================
+ STEP 8: ELEVENLABS COMPOSITION PLAN (/v1/music/plan)
+================================================================================
+
+Request payload:
+{
+  "prompt": "Instrumental music track. Genre: hyperpop. Scene: A tight, flat-lit close-up of vertical color bands\u2014blue, lime, hot pink, and green\u2014like sticky notes or a color test strip laid on a desk. The surface reads matte and papery, with shallow depth and a soft shadow at the top where a fingertip intrudes, giving the scene a tactile, handheld immediacy.. Vibe: neon-matte crispness, papery dry brightness, playful synthetic pop, close-quarters tactile immediacy. Setting: null indoor. Sounds like: A bright, staccato synth arpeggio clicking like paper edges being aligned under fluorescent light.. Explosively energetic, playful and restlessly focused mood with a organic and verdant, vivid tonal palette, staccato, clicky, glossy-synthetic, tight-gated, layered arpeggios, micro-percussive textures, and driving, steady rhythms with layered complexity. Instruments: bright analog synth arpeggiator, FM pluck lead, 808 kick, tight clap/snare. Timbre: neon-clean digital brightness with papery clicks, short room reverb, and crisp transient focus. Harmonic feel: sparkly and resolving with quick, curious turnarounds. Dynamic shape: quick drop-in, steady forward push with small rhythmic fills, final bar filter-lift then hard stop. Drawing from: sticky note edge peel snap, fingertip rubbing on paper, paper sliding on tabletop, phone handling rustle, subtle electronics room hum. Make it musically engaging with clear rhythm and forward momentum. 164 BPM, in E major, fast tempo, dense density, 18 seconds long. Instrumental only, no vocals, no lyrics.",
+  "music_length_ms": 18000,
+  "prompt_influence": 0.85,
+  "force_instrumental": true
+}
+
+Response: composition_plan JSON (opaque, passed to next step)
+
+================================================================================
+ STEP 9: ELEVENLABS AUDIO GENERATION (/v1/music)
+================================================================================
+
+Request: { composition_plan: <from previous step>, output_format: "mp3" }
+
+Output: 9f7d7fe758f0.mp3
+Saved to: backend/audio_files/9f7d7fe758f0.mp3
+
+================================================================================
+  TRACE COMPLETE — 9f7d7fe758f0.mp3
+================================================================================

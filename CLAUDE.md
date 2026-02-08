@@ -14,6 +14,21 @@ Image-to-audio social media MVP. Users upload images, draw squiggle gestures, pi
 
 **Config** (`backend/config.py`): Loads `OPENAI_API_KEY`, `ELEVENLABS_API_KEY`, `openai_model` (gpt-5.2), `elevenlabs_music_model` (music_v1), `max_image_size_mb` (10) from `.env`.
 
+## Local Development
+
+Requires Python 3.12+ (system Python 3.9 has httpx/openai incompatibilities). Run from the **project root** (`re_be/`), not from `backend/`.
+
+```bash
+cd backend
+python3.12 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cd ..
+python3.12 -m uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+Frontend is served automatically by FastAPI at `http://localhost:8000`. Needs a `.env` file in the project root with `OPENAI_API_KEY` and `ELEVENLABS_API_KEY`.
+
 ## Key Implementation Details
 
 - Audio files saved to `backend/audio_files/` and served at `/api/audio/`

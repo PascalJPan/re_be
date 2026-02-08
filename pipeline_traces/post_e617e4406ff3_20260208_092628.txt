@@ -1,0 +1,182 @@
+================================================================================
+  PIPELINE TRACE — POST
+  ID: e617e4406ff3  |  User: pascal  |  2026-02-08T09:26:28.858655
+================================================================================
+
+================================================================================
+ STEP 1: COLOR DERIVATION
+================================================================================
+
+Input hex: #4051bf
+
+{
+  "hex": "#4051bf",
+  "hue_category": "cool_blue",
+  "saturation": 0.498,
+  "lightness": 0.5
+}
+
+================================================================================
+ STEP 2: IMAGE ANALYSIS (OpenAI Vision → gpt-5.2)
+================================================================================
+
+Input: user-uploaded image (binary)
+
+Output (ImageAnalysis):
+{
+  "scene_description": "A close-up of a chocolate-brown dog fills the foreground, its mouth open in a bright, panting grin that catches soft daylight on wet nose and teeth. Behind it, a shallow depth of field turns a grassy lawn into a creamy green blur, giving the scene airy space and a gentle, sun-warmed softness.",
+  "detected_objects": [
+    "dog",
+    "fur (short, brown)",
+    "open mouth",
+    "teeth",
+    "tongue",
+    "wet nose",
+    "eyes",
+    "floppy ears",
+    "grass lawn",
+    "sunlit bokeh background"
+  ],
+  "vibe": "sun-dappled buoyancy, velvety warmth, breezy openness, playful gloss",
+  "emotion": "unfiltered joy with eager, tail-wagging anticipation",
+  "dominant_colors": [
+    "chocolate brown fur",
+    "fresh lawn green",
+    "pale yellow-green highlights",
+    "soft pink tongue",
+    "warm off-white teeth"
+  ],
+  "environment": "outdoor",
+  "time_of_day": "afternoon",
+  "location_hint": "a backyard or park lawn in gentle sunlight",
+  "ambient_sound_associations": [
+    "rapid dog panting",
+    "soft jingle of a collar tag",
+    "paws scuffing lightly on grass",
+    "a distant lawnmower hum",
+    "small birds chirping from nearby trees",
+    "a faint breeze rustling blades of grass",
+    "a short, excited bark that cuts off into a whine"
+  ],
+  "sonic_metaphor": "A bright snare-brush shuffle under a warm brass grin\u2014breath and sunlight turning into rhythm."
+}
+
+================================================================================
+ STEP 3: SQUIGGLE FEATURE EXTRACTION
+================================================================================
+
+Output (SquiggleFeatures):
+{
+  "total_length": 0.779262,
+  "bounding_box_area": 0.140635,
+  "average_speed": 0.00087,
+  "speed_variance": 2e-06,
+  "point_count": 55
+}
+
+================================================================================
+ STEP 4: IMAGE ENHANCEMENT PROMPT (OpenAI → gpt-5.2)
+================================================================================
+
+Input: ImageAnalysis + ColorInput + SquiggleFeatures
+
+Output (ImageEnhancementPrompt):
+{
+  "emotional_intent": "Turn the dog\u2019s pure joy into an electric, kinetic celebration\u2014like laughter translated into light and ink.",
+  "visual_directive": "Recast the photo as a bold cyanotype-blueprint pop print with punchy halftones, white-hot highlights, and playful graphic linework energy.",
+  "morphing_prompt": "Transform the image into a high-contrast cyanotype/blueprint-style screen print dominated by #4051bf, pushing the background lawn into abstract bokeh dots and soft blueprint grain while keeping the dog\u2019s face and grin sharply recognizable. Convert fur and facial contours into layered halftone fields and crisp posterized edges, then add thin white schematic linework (like drafting marks) that traces the dog\u2019s nose, teeth, and tongue for a lively \u201ctechnical joy\u201d vibe. Keep the effect concentrated around the dog\u2019s head (center-focused), with subtle ink bleed, paper texture, and slight misregistration to make it feel like an energetic art print rather than a photo.",
+  "style_reference": "Cyanotype blueprint meets Lichtenstein pop-art halftone with risograph misregistration"
+}
+
+================================================================================
+ STEP 5: IMAGE MORPHING (OpenAI → gpt-image-1)
+================================================================================
+
+Input image: original + color overlay (Pillow)
+Prompt sent to gpt-image-1:
+
+  "Transform the image into a high-contrast cyanotype/blueprint-style screen print dominated by #4051bf, pushing the background lawn into abstract bokeh dots and soft blueprint grain while keeping the dog’s face and grin sharply recognizable. Convert fur and facial contours into layered halftone fields and crisp posterized edges, then add thin white schematic linework (like drafting marks) that traces the dog’s nose, teeth, and tongue for a lively “technical joy” vibe. Keep the effect concentrated around the dog’s head (center-focused), with subtle ink bleed, paper texture, and slight misregistration to make it feel like an energetic art print rather than a photo."
+
+Output: morphed image bytes (stored as post image) — SUCCESS
+
+================================================================================
+ STEP 6: AUDIO STRUCTURED OBJECT (OpenAI → gpt-5.2)
+================================================================================
+
+Input: ImageAnalysis + ColorInput + SquiggleFeatures
+
+Output (AudioStructuredObject):
+{
+  "audio_type": "music",
+  "mood": {
+    "primary": "playful",
+    "secondary": "sunlit"
+  },
+  "energy": 0.68,
+  "tempo": "medium",
+  "density": "medium",
+  "texture": [
+    "bouncy shuffle groove",
+    "bright percussive ticks",
+    "warm melodic stabs",
+    "airy background pad"
+  ],
+  "sound_references": [
+    "light dog panting as rhythmic breath layer",
+    "subtle collar tag jingle as occasional sparkle",
+    "soft grass scuff foley tucked under the beat",
+    "distant birds as faint high ambience"
+  ],
+  "duration_seconds": 18,
+  "bpm": 124,
+  "musical_key": "D minor",
+  "relation_to_parent": "original",
+  "confidence": 0.84,
+  "instruments": [
+    "Rhodes piano",
+    "muted trumpet",
+    "brushed snare kit",
+    "electric bass"
+  ],
+  "genre_hint": "nu-jazz groove",
+  "harmonic_mood": "brightly suspended with quick resolving turns",
+  "dynamic_shape": "quick lift-in, steady bounce, small mid-clip push, clean button ending",
+  "sonic_palette": "cool-leaning glossy mix with warm brass highlights, tight room reverb, crisp transients"
+}
+
+================================================================================
+ STEP 7: COMPILED PROMPT (deterministic logic)
+================================================================================
+
+Input: AudioStructuredObject + ColorInput + ImageAnalysis + SquiggleFeatures
+
+Output (prompt string sent to ElevenLabs):
+
+  "Instrumental music track. Genre: nu-jazz groove. Scene: A close-up of a chocolate-brown dog fills the foreground, its mouth open in a bright, panting grin that catches soft daylight on wet nose and teeth. Behind it, a shallow depth of field turns a grassy lawn into a creamy green blur, giving the scene airy space and a gentle, sun-warmed softness.. Vibe: sun-dappled buoyancy, velvety warmth, breezy openness, playful gloss. Setting: afternoon outdoor. Sounds like: A bright snare-brush shuffle under a warm brass grin—breath and sunlight turning into rhythm.. Intensely surging, playful and sunlit mood with a cool and ethereal tonal palette, bouncy shuffle groove, bright percussive ticks, warm melodic stabs, airy background pad textures, and flowing, melodic phrases. Instruments: Rhodes piano, muted trumpet, brushed snare kit, electric bass. Timbre: cool-leaning glossy mix with warm brass highlights, tight room reverb, crisp transients. Harmonic feel: brightly suspended with quick resolving turns. Dynamic shape: quick lift-in, steady bounce, small mid-clip push, clean button ending. Drawing from: light dog panting as rhythmic breath layer, subtle collar tag jingle as occasional sparkle, soft grass scuff foley tucked under the beat, distant birds as faint high ambience. Make it musically engaging with clear rhythm and forward momentum. 124 BPM, in D minor, medium tempo, medium density, 18 seconds long. Instrumental only, no vocals, no lyrics."
+
+================================================================================
+ STEP 8: ELEVENLABS COMPOSITION PLAN (/v1/music/plan)
+================================================================================
+
+Request payload:
+{
+  "prompt": "Instrumental music track. Genre: nu-jazz groove. Scene: A close-up of a chocolate-brown dog fills the foreground, its mouth open in a bright, panting grin that catches soft daylight on wet nose and teeth. Behind it, a shallow depth of field turns a grassy lawn into a creamy green blur, giving the scene airy space and a gentle, sun-warmed softness.. Vibe: sun-dappled buoyancy, velvety warmth, breezy openness, playful gloss. Setting: afternoon outdoor. Sounds like: A bright snare-brush shuffle under a warm brass grin\u2014breath and sunlight turning into rhythm.. Intensely surging, playful and sunlit mood with a cool and ethereal tonal palette, bouncy shuffle groove, bright percussive ticks, warm melodic stabs, airy background pad textures, and flowing, melodic phrases. Instruments: Rhodes piano, muted trumpet, brushed snare kit, electric bass. Timbre: cool-leaning glossy mix with warm brass highlights, tight room reverb, crisp transients. Harmonic feel: brightly suspended with quick resolving turns. Dynamic shape: quick lift-in, steady bounce, small mid-clip push, clean button ending. Drawing from: light dog panting as rhythmic breath layer, subtle collar tag jingle as occasional sparkle, soft grass scuff foley tucked under the beat, distant birds as faint high ambience. Make it musically engaging with clear rhythm and forward momentum. 124 BPM, in D minor, medium tempo, medium density, 18 seconds long. Instrumental only, no vocals, no lyrics.",
+  "music_length_ms": 18000,
+  "prompt_influence": 0.85,
+  "force_instrumental": true
+}
+
+Response: composition_plan JSON (opaque, passed to next step)
+
+================================================================================
+ STEP 9: ELEVENLABS AUDIO GENERATION (/v1/music)
+================================================================================
+
+Request: { composition_plan: <from previous step>, output_format: "mp3" }
+
+Output: e617e4406ff3.mp3
+Saved to: backend/audio_files/e617e4406ff3.mp3
+
+================================================================================
+  TRACE COMPLETE — e617e4406ff3.mp3
+================================================================================

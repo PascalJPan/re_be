@@ -1,0 +1,180 @@
+================================================================================
+  PIPELINE TRACE — POST
+  ID: 23354c0c2044  |  User: pascal  |  2026-02-08T09:05:16.446364
+================================================================================
+
+================================================================================
+ STEP 1: COLOR DERIVATION
+================================================================================
+
+Input hex: #98c837
+
+{
+  "hex": "#98c837",
+  "hue_category": "cool_green",
+  "saturation": 0.569,
+  "lightness": 0.5
+}
+
+================================================================================
+ STEP 2: IMAGE ANALYSIS (OpenAI Vision → gpt-5.2)
+================================================================================
+
+Input: user-uploaded image (binary)
+
+Output (ImageAnalysis):
+{
+  "scene_description": "A close, front-facing portrait fills the frame: a person sits under a grid of office ceiling tiles, their hand covering their mouth in a quiet, inward pause. Cool, flat fluorescent light washes the skin and softens shadows, while the background recedes into a muted gray wall and dark vent slats, giving the space a shallow, boxed-in depth.",
+  "detected_objects": [
+    "person",
+    "hand covering mouth",
+    "collared shirt (dusty mauve fabric)",
+    "dark undershirt",
+    "drop ceiling tiles",
+    "fluorescent light fixture",
+    "ceiling vent/grille",
+    "plain wall"
+  ],
+  "vibe": "cool fluorescent stillness, muted institutional hush, soft-grain intimacy, slightly airless quiet",
+  "emotion": "pensive self-containment with a thread of tired uncertainty",
+  "dominant_colors": [
+    "cool gray-white ceiling",
+    "dusty mauve/pink shirt",
+    "soft beige skin tones",
+    "charcoal vent slats",
+    "muted slate-gray wall"
+  ],
+  "environment": "indoor",
+  "time_of_day": "null",
+  "location_hint": "a quiet office or classroom-like room with fluorescent ceiling panels",
+  "ambient_sound_associations": [
+    "fluorescent light ballast hum",
+    "faint HVAC airflow through a ceiling vent",
+    "soft fabric rustle from a sleeve shifting",
+    "subtle breath through the nose behind a hand",
+    "distant muffled footsteps in a corridor",
+    "a chair\u2019s barely-audible creak under a small weight shift",
+    "occasional building settling tick from the ceiling grid"
+  ],
+  "sonic_metaphor": "A thin fluorescent hum stretched into a held note, with a heartbeat-like thud buried under layers of quiet air."
+}
+
+================================================================================
+ STEP 3: SQUIGGLE FEATURE EXTRACTION
+================================================================================
+
+Output (SquiggleFeatures):
+{
+  "total_length": 0.00063,
+  "bounding_box_area": 0.0,
+  "average_speed": 0.00063,
+  "speed_variance": 0.0,
+  "point_count": 2
+}
+
+================================================================================
+ STEP 4: IMAGE ENHANCEMENT PROMPT (OpenAI → gpt-5.2)
+================================================================================
+
+Input: ImageAnalysis + ColorInput + SquiggleFeatures
+
+Output (ImageEnhancementPrompt):
+{
+  "emotional_intent": "Transform the pensive self-containment into a calm, oxygen-rich moment of quiet resolve, as if the room finally exhales with them.",
+  "visual_directive": "Grade the image toward cool-green (#98c837) undertones with softened contrast, gentle bloom around the fluorescent light, and a subtle atmospheric veil to reduce the institutional harshness.",
+  "morphing_prompt": "Preserve the exact portrait and composition, but let a cool-green, organic tint seep into the midtones and shadows, turning the fluorescent flatness into a calmer, more breathable hush. Soften edges and micro-contrast on skin and ceiling tiles, add a faint film-grain texture, and introduce a delicate haze that makes the background feel less boxed-in while keeping all objects unchanged. Shape the light so highlights roll off smoothly with a mild glow, and add a restrained vignette to pull the viewer into the subject\u2019s inward pause without increasing drama.",
+  "style_reference": "Sofia Coppola quiet minimalism with subtle contemporary film grain"
+}
+
+================================================================================
+ STEP 5: IMAGE MORPHING (OpenAI → gpt-image-1)
+================================================================================
+
+Input image: original + color overlay (Pillow)
+Prompt sent to gpt-image-1:
+
+  "Preserve the exact portrait and composition, but let a cool-green, organic tint seep into the midtones and shadows, turning the fluorescent flatness into a calmer, more breathable hush. Soften edges and micro-contrast on skin and ceiling tiles, add a faint film-grain texture, and introduce a delicate haze that makes the background feel less boxed-in while keeping all objects unchanged. Shape the light so highlights roll off smoothly with a mild glow, and add a restrained vignette to pull the viewer into the subject’s inward pause without increasing drama."
+
+Output: morphed image bytes (stored as post image) — SUCCESS
+
+================================================================================
+ STEP 6: AUDIO STRUCTURED OBJECT (OpenAI → gpt-5.2)
+================================================================================
+
+Input: ImageAnalysis + ColorInput + SquiggleFeatures
+
+Output (AudioStructuredObject):
+{
+  "audio_type": "music",
+  "mood": {
+    "primary": "pensive",
+    "secondary": "wary-calm"
+  },
+  "energy": 0.18,
+  "tempo": "slow",
+  "density": "sparse",
+  "texture": [
+    "held sine-like drone",
+    "soft pulse/heartbeat thud",
+    "airy room-tone bed",
+    "subtle tape hiss"
+  ],
+  "sound_references": [
+    "fluorescent ballast hum",
+    "faint HVAC airflow through a ceiling vent",
+    "subtle nasal breath behind a hand",
+    "distant muffled corridor footsteps"
+  ],
+  "duration_seconds": 15,
+  "bpm": 74,
+  "musical_key": "D minor",
+  "relation_to_parent": "original",
+  "confidence": 0.78,
+  "instruments": [
+    "soft analog synth pad",
+    "sub-bass pulse",
+    "electric piano (Rhodes)",
+    "very light brushed snare"
+  ],
+  "genre_hint": "minimal downtempo",
+  "harmonic_mood": "suspended and unresolved",
+  "dynamic_shape": "nearly static bed with a faint pulse that gently fades at the end",
+  "sonic_palette": "cool, clean fluorescent sheen with organic green-tinted warmth and light tape grain"
+}
+
+================================================================================
+ STEP 7: COMPILED PROMPT (deterministic logic)
+================================================================================
+
+Input: AudioStructuredObject + ColorInput + ImageAnalysis + SquiggleFeatures
+
+Output (prompt string sent to ElevenLabs):
+
+  "Instrumental music track. Genre: minimal downtempo. Scene: A close, front-facing portrait fills the frame: a person sits under a grid of office ceiling tiles, their hand covering their mouth in a quiet, inward pause. Cool, flat fluorescent light washes the skin and softens shadows, while the background recedes into a muted gray wall and dark vent slats, giving the space a shallow, boxed-in depth.. Vibe: cool fluorescent stillness, muted institutional hush, soft-grain intimacy, slightly airless quiet. Setting: null indoor. Sounds like: A thin fluorescent hum stretched into a held note, with a heartbeat-like thud buried under layers of quiet air.. Gently simmering, pensive and wary-calm mood with a organic and verdant tonal palette, Instruments: soft analog synth pad, sub-bass pulse, electric piano (Rhodes), very light brushed snare. Timbre: cool, clean fluorescent sheen with organic green-tinted warmth and light tape grain. Harmonic feel: suspended and unresolved. Dynamic shape: nearly static bed with a faint pulse that gently fades at the end. Drawing from: fluorescent ballast hum, faint HVAC airflow through a ceiling vent, subtle nasal breath behind a hand, distant muffled corridor footsteps. 74 BPM, in D minor, slow tempo, sparse density, 15 seconds long. Instrumental only, no vocals, no lyrics."
+
+================================================================================
+ STEP 8: ELEVENLABS COMPOSITION PLAN (/v1/music/plan)
+================================================================================
+
+Request payload:
+{
+  "prompt": "Instrumental music track. Genre: minimal downtempo. Scene: A close, front-facing portrait fills the frame: a person sits under a grid of office ceiling tiles, their hand covering their mouth in a quiet, inward pause. Cool, flat fluorescent light washes the skin and softens shadows, while the background recedes into a muted gray wall and dark vent slats, giving the space a shallow, boxed-in depth.. Vibe: cool fluorescent stillness, muted institutional hush, soft-grain intimacy, slightly airless quiet. Setting: null indoor. Sounds like: A thin fluorescent hum stretched into a held note, with a heartbeat-like thud buried under layers of quiet air.. Gently simmering, pensive and wary-calm mood with a organic and verdant tonal palette, Instruments: soft analog synth pad, sub-bass pulse, electric piano (Rhodes), very light brushed snare. Timbre: cool, clean fluorescent sheen with organic green-tinted warmth and light tape grain. Harmonic feel: suspended and unresolved. Dynamic shape: nearly static bed with a faint pulse that gently fades at the end. Drawing from: fluorescent ballast hum, faint HVAC airflow through a ceiling vent, subtle nasal breath behind a hand, distant muffled corridor footsteps. 74 BPM, in D minor, slow tempo, sparse density, 15 seconds long. Instrumental only, no vocals, no lyrics.",
+  "music_length_ms": 15000,
+  "prompt_influence": 0.85,
+  "force_instrumental": true
+}
+
+Response: composition_plan JSON (opaque, passed to next step)
+
+================================================================================
+ STEP 9: ELEVENLABS AUDIO GENERATION (/v1/music)
+================================================================================
+
+Request: { composition_plan: <from previous step>, output_format: "mp3" }
+
+Output: 23354c0c2044.mp3
+Saved to: backend/audio_files/23354c0c2044.mp3
+
+================================================================================
+  TRACE COMPLETE — 23354c0c2044.mp3
+================================================================================

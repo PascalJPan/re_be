@@ -4,14 +4,27 @@ const BAR_GAP = 2;
 
 // Shared AudioContext for decoding
 let sharedCtx = null;
-function getAudioContext() {
+async function getAudioContext() {
+  if (sharedCtx && sharedCtx.state === 'closed') sharedCtx = null;
   if (!sharedCtx) sharedCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (sharedCtx.state === 'suspended') await sharedCtx.resume();
   return sharedCtx;
+}
+
+// ==================== Safe Play Helper ====================
+export function safePlay(audio) {
+  return audio.play().catch(err => {
+    if (err.name === 'NotAllowedError') {
+      console.warn('[audio-player] play blocked by browser autoplay policy');
+    } else if (err.name !== 'AbortError') {
+      console.warn('[audio-player] play() failed:', err.message);
+    }
+  });
 }
 
 // ==================== Sync Manager ====================
 const sync = {
-  players: new Map(),       // id -> { audio, peaks, canvas, color, height, active }
+  players: new Map(),       // id -> { audio, peaks, canvas, color, height, active, ac }
   duration: 0,              // shared loop duration in seconds
   startedAt: 0,             // performance.now() when clock started
   pauseOffset: 0,           // accumulated time when paused
@@ -27,7 +40,12 @@ export function initSync(duration) {
 }
 
 function clearSync() {
-  sync.players.forEach(p => { p.audio.pause(); p.audio.src = ''; });
+  sync.players.forEach(p => {
+    p.audio.pause();
+    p.audio.removeAttribute('src');
+    p.audio.load();
+    if (p.ac) p.ac.abort();
+  });
   sync.players.clear();
   if (sync.animFrameId) cancelAnimationFrame(sync.animFrameId);
   sync.animFrameId = null;
@@ -75,7 +93,7 @@ function togglePlayer(id) {
     if (player.audio.duration) {
       player.audio.currentTime = pos % player.audio.duration;
     }
-    player.audio.play().catch(() => {});
+    safePlay(player.audio);
     startClock();
     if (!sync.animFrameId) tickLoop();
   }
@@ -147,11 +165,17 @@ export function createPlayer(audioUrl, container, color = '#ff4444', opts = {}) 
   const useSync = opts.sync || false;
   const playerId = opts.id || ('player-' + Math.random().toString(36).slice(2, 8));
 
+  // Cache-bust: append timestamp so browser doesn't serve stale audio after recreate
+  const bustUrl = audioUrl + (audioUrl.includes('?') ? '&' : '?') + '_t=' + Date.now();
+
+  const ac = new AbortController();
+  const { signal } = ac;
+
   const wrapper = document.createElement('div');
   wrapper.className = 'audio-player' + (overlay ? ' waveform-overlay' : '');
 
   const audio = document.createElement('audio');
-  audio.src = audioUrl;
+  audio.src = bustUrl;
   audio.preload = 'auto';
   audio.loop = !useSync; // non-sync players loop natively
 
@@ -164,9 +188,9 @@ export function createPlayer(audioUrl, container, color = '#ff4444', opts = {}) 
   let simpleActive = false; // for non-sync simple play/pause
 
   // Decode audio for waveform
-  fetch(audioUrl)
+  fetch(bustUrl, { signal })
     .then(r => r.arrayBuffer())
-    .then(buf => getAudioContext().decodeAudioData(buf))
+    .then(buf => getAudioContext().then(ctx => ctx.decodeAudioData(buf)))
     .then(decoded => {
       peaks = computePeaks(decoded, BAR_COUNT);
       canvas.width = BAR_COUNT * (BAR_WIDTH + BAR_GAP);
@@ -176,7 +200,8 @@ export function createPlayer(audioUrl, container, color = '#ff4444', opts = {}) 
         sync.players.get(playerId).peaks = peaks;
       }
     })
-    .catch(() => {
+    .catch(err => {
+      if (err.name === 'AbortError') return;
       peaks = Array.from({ length: BAR_COUNT }, () => 0.2 + Math.random() * 0.6);
       canvas.width = BAR_COUNT * (BAR_WIDTH + BAR_GAP);
       drawWaveform(canvas.getContext('2d'), peaks, 0, color, height, false);
@@ -188,7 +213,7 @@ export function createPlayer(audioUrl, container, color = '#ff4444', opts = {}) 
   if (useSync && sync.enabled) {
     // Register with sync manager
     sync.players.set(playerId, {
-      audio, peaks, canvas, color, height, active: false,
+      audio, peaks, canvas, color, height, active: false, ac,
     });
 
     // Looping via ended event
@@ -197,58 +222,76 @@ export function createPlayer(audioUrl, container, color = '#ff4444', opts = {}) 
       if (p && p.active && sync.running) {
         const pos = getClockPosition();
         audio.currentTime = pos % (audio.duration || sync.duration);
-        audio.play().catch(() => {});
+        safePlay(audio);
       }
-    });
+    }, { signal });
 
     // Click canvas to toggle
-    canvas.addEventListener('click', () => togglePlayer(playerId));
+    canvas.addEventListener('click', () => togglePlayer(playerId), { signal });
   } else {
     // Simple independent play/pause (feed cards)
     let animId = null;
+    let waitFrames = 0;
+    const MAX_WAIT_FRAMES = 300; // ~5 seconds at 60fps
 
     function simpleTick() {
-      if (!peaks || !audio.duration) { animId = requestAnimationFrame(simpleTick); return; }
+      if (!peaks || !audio.duration) {
+        waitFrames++;
+        if (waitFrames < MAX_WAIT_FRAMES && !audio.paused) {
+          animId = requestAnimationFrame(simpleTick);
+        } else {
+          animId = null;
+        }
+        return;
+      }
+      waitFrames = 0;
       const progress = audio.currentTime / audio.duration;
       drawWaveform(canvas.getContext('2d'), peaks, progress, color, height, true);
-      if (!audio.paused) animId = requestAnimationFrame(simpleTick);
+      if (!audio.paused) {
+        animId = requestAnimationFrame(simpleTick);
+      } else {
+        animId = null;
+      }
     }
 
     audio.addEventListener('play', () => {
       if (!simpleActive) {
         simpleActive = true;
+        waitFrames = 0;
         simpleTick();
       }
-    });
+    }, { signal });
 
     if (!opts.noClick) {
       canvas.addEventListener('click', () => {
         if (audio.paused) {
           simpleActive = true;
-          audio.play().catch(() => {});
+          waitFrames = 0;
+          safePlay(audio);
           simpleTick();
         } else {
           audio.pause();
           simpleActive = false;
           if (peaks) drawWaveform(canvas.getContext('2d'), peaks, 0, color, height, false);
         }
-      });
+      }, { signal });
     }
 
     audio.addEventListener('ended', () => {
       simpleActive = false;
       if (peaks) drawWaveform(canvas.getContext('2d'), peaks, 0, color, height, false);
-    });
+    }, { signal });
 
     audio.addEventListener('pause', () => {
       if (animId) { cancelAnimationFrame(animId); animId = null; }
-    });
+    }, { signal });
 
     // External control for feed autoplay
     audio.feedPlay = () => {
       if (audio.paused) {
         simpleActive = true;
-        audio.play().catch(() => {});
+        waitFrames = 0;
+        safePlay(audio);
         simpleTick();
       }
     };
@@ -262,6 +305,9 @@ export function createPlayer(audioUrl, container, color = '#ff4444', opts = {}) 
     };
   }
 
+  // Store AbortController on audio element for clearPlayers()
+  audio._playerAc = ac;
+
   wrapper.appendChild(audio);
   wrapper.appendChild(canvas);
   container.appendChild(wrapper);
@@ -272,5 +318,10 @@ export function clearPlayers() {
   // Stop all synced players
   clearSync();
   // Also stop any stray audio elements
-  document.querySelectorAll('.audio-player audio').forEach(a => { a.pause(); a.src = ''; });
+  document.querySelectorAll('.audio-player audio').forEach(a => {
+    a.pause();
+    if (a._playerAc) a._playerAc.abort();
+    a.removeAttribute('src');
+    a.load();
+  });
 }

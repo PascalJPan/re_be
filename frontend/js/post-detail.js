@@ -36,6 +36,41 @@ async function loadPost(container, postId) {
     headerRow.appendChild(time);
     container.appendChild(headerRow);
 
+    // Generating/failed state — show placeholder
+    if (post.status && post.status !== 'ready') {
+      const cardRow = document.createElement('div');
+      cardRow.className = 'detail-card-row';
+
+      const card = document.createElement('div');
+      card.className = 'detail-card';
+      card.style.boxShadow = `0 0 30px ${post.color_hex}20, 0 0 60px ${post.color_hex}10`;
+
+      const placeholder = document.createElement('div');
+      placeholder.className = 'post-card-placeholder';
+      placeholder.style.background = post.color_hex;
+
+      if (post.status === 'failed') {
+        placeholder.style.opacity = '0.5';
+        const label = document.createElement('span');
+        label.className = 'generating-label';
+        label.textContent = 'failed';
+        placeholder.appendChild(label);
+      } else {
+        const shimmer = document.createElement('div');
+        shimmer.className = 'shimmer-overlay';
+        placeholder.appendChild(shimmer);
+        const label = document.createElement('span');
+        label.className = 'generating-label';
+        label.textContent = 'generating...';
+        placeholder.appendChild(label);
+      }
+
+      card.appendChild(placeholder);
+      cardRow.appendChild(card);
+      container.appendChild(cardRow);
+      return;
+    }
+
     // Card with image + star
     const cardRow = document.createElement('div');
     cardRow.className = 'detail-card-row';

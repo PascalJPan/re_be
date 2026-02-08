@@ -2,10 +2,31 @@ import * as api from './api.js';
 import { getUser } from './auth.js';
 import { navigate } from './router.js';
 import { timeAgo, toast } from './ui.js';
+import { addGeneratingPost, onStatusChange } from './generation-tracker.js';
+
+let activeCloseHandler = null;
+let statusUnsub = null;
 
 export function render(container, username) {
   container.innerHTML = '<div class="feed-loading">Loading...</div>';
+
+  // Subscribe to generation status changes to re-render profile
+  statusUnsub = (postId, status) => {
+    loadProfile(container, username, 1);
+  };
+  onStatusChange(statusUnsub);
+
   loadProfile(container, username, 1);
+
+  // Cleanup: remove any open menus and their document-level click listeners
+  return () => {
+    statusUnsub = null;
+    if (activeCloseHandler) {
+      document.removeEventListener('click', activeCloseHandler);
+      activeCloseHandler = null;
+    }
+    document.querySelectorAll('.profile-grid-menu').forEach(m => m.remove());
+  };
 }
 
 async function loadProfile(container, username, page) {
@@ -41,6 +62,42 @@ async function loadProfile(container, username, page) {
       const cell = document.createElement('div');
       cell.className = 'profile-grid-item';
       cell.style.boxShadow = '0 2px 12px ' + post.color_hex + '20';
+
+      // Generating/failed state — colored placeholder
+      if (post.status && post.status !== 'ready') {
+        cell.style.background = post.color_hex;
+        cell.style.cursor = 'default';
+
+        if (post.status === 'failed') {
+          cell.style.opacity = '0.5';
+          const label = document.createElement('span');
+          label.className = 'generating-label';
+          label.textContent = 'failed';
+          cell.appendChild(label);
+        } else {
+          const shimmer = document.createElement('div');
+          shimmer.className = 'shimmer-overlay';
+          cell.appendChild(shimmer);
+          const label = document.createElement('span');
+          label.className = 'generating-label';
+          label.textContent = 'generating...';
+          cell.appendChild(label);
+        }
+
+        if (isOwnProfile) {
+          const menuBtn = document.createElement('button');
+          menuBtn.className = 'profile-grid-menu-btn';
+          menuBtn.textContent = '\u2026';
+          menuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            showPostMenu(cell, post.id, container, username, page);
+          });
+          cell.appendChild(menuBtn);
+        }
+
+        grid.appendChild(cell);
+        continue;
+      }
 
       const img = document.createElement('img');
       img.src = post.image_url;
@@ -97,15 +154,40 @@ async function loadProfile(container, username, page) {
       container.appendChild(pager);
     }
   } catch (e) {
-    container.innerHTML = `<div class="error-msg">${e.message}</div>`;
+    const errDiv = document.createElement('div');
+    errDiv.className = 'error-msg';
+    errDiv.textContent = e.message;
+    container.innerHTML = '';
+    container.appendChild(errDiv);
   }
 }
 
 function showPostMenu(cell, postId, container, username, page) {
+  if (activeCloseHandler) {
+    document.removeEventListener('click', activeCloseHandler);
+    activeCloseHandler = null;
+  }
   document.querySelectorAll('.profile-grid-menu').forEach(m => m.remove());
 
   const menu = document.createElement('div');
   menu.className = 'profile-grid-menu';
+
+  const recreateBtn = document.createElement('button');
+  recreateBtn.className = 'profile-grid-menu-recreate';
+  recreateBtn.textContent = 'Recreate';
+  recreateBtn.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    menu.remove();
+
+    try {
+      const result = await api.recreatePost(postId);
+      addGeneratingPost(postId, result.color_hex);
+      loadProfile(container, username, page);
+    } catch (err) {
+      toast(err.message, true);
+    }
+  });
+  menu.appendChild(recreateBtn);
 
   const deleteBtn = document.createElement('button');
   deleteBtn.textContent = 'Delete';
@@ -123,10 +205,12 @@ function showPostMenu(cell, postId, container, username, page) {
   cell.appendChild(menu);
 
   const close = (e) => {
-    if (!menu.contains(e.target)) {
+    if (!menu.parentNode || !menu.contains(e.target)) {
       menu.remove();
       document.removeEventListener('click', close);
+      activeCloseHandler = null;
     }
   };
+  activeCloseHandler = close;
   setTimeout(() => document.addEventListener('click', close), 0);
 }

@@ -4,7 +4,8 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     openai_api_key: str = ""
     elevenlabs_api_key: str = ""
-    openai_model: str = "gpt-5.2"
+    openai_model: str = "gpt-5-model"
+    openai_fast_model: str = "gpt-4.1-nano"
     openai_image_model: str = "gpt-image-1"
     elevenlabs_sfx_model: str = "eleven_text_to_sound_v2"
     elevenlabs_music_model: str = "music_v1"

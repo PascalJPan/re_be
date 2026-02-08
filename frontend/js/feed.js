@@ -2,13 +2,25 @@ import * as api from './api.js';
 import * as audioPlayer from './audio-player.js';
 import { navigate } from './router.js';
 import { timeAgo } from './ui.js';
+import { onStatusChange } from './generation-tracker.js';
 
 let observer = null;
 let currentlyPlaying = null;
+let statusUnsub = null;
 
 export function render(container) {
   container.innerHTML = '<div class="feed-loading">Loading...</div>';
   container.classList.add('feed-scroll');
+
+  // Subscribe to generation status changes to re-render feed
+  statusUnsub = (postId, status) => {
+    // Re-render the whole feed when any post transitions
+    cleanup(container);
+    container.classList.add('feed-scroll');
+    loadFeed(container, 1);
+  };
+  onStatusChange(statusUnsub);
+
   loadFeed(container, 1);
   return () => cleanup(container);
 }
@@ -78,7 +90,11 @@ async function loadFeed(container, page) {
 
     setupAutoplay(items);
   } catch (e) {
-    container.innerHTML = `<div class="error-msg">${e.message}</div>`;
+    const errDiv = document.createElement('div');
+    errDiv.className = 'error-msg';
+    errDiv.textContent = e.message;
+    container.innerHTML = '';
+    container.appendChild(errDiv);
   }
 }
 
@@ -99,8 +115,10 @@ function setupAutoplay(items) {
   }, { threshold: 0.6 });
 
   for (const { wrapper, audio } of items) {
-    wrapper._feedAudio = audio;
-    observer.observe(wrapper);
+    if (audio) {
+      wrapper._feedAudio = audio;
+      observer.observe(wrapper);
+    }
   }
 }
 
@@ -108,6 +126,41 @@ function createPostCard(post) {
   const wrapper = document.createElement('div');
   wrapper.className = 'post-card-wrapper';
 
+  // Generating or failed state — show placeholder
+  if (post.status !== 'ready') {
+    wrapper.classList.add('post-card-generating');
+
+    const card = document.createElement('div');
+    card.className = 'post-card';
+    card.style.boxShadow = `0 0 30px ${post.color_hex}20, 0 0 60px ${post.color_hex}10`;
+
+    const placeholder = document.createElement('div');
+    placeholder.className = 'post-card-placeholder';
+    placeholder.style.background = post.color_hex;
+
+    if (post.status === 'failed') {
+      placeholder.style.opacity = '0.5';
+      const label = document.createElement('span');
+      label.className = 'generating-label';
+      label.textContent = 'failed';
+      placeholder.appendChild(label);
+    } else {
+      const shimmer = document.createElement('div');
+      shimmer.className = 'shimmer-overlay';
+      placeholder.appendChild(shimmer);
+
+      const label = document.createElement('span');
+      label.className = 'generating-label';
+      label.textContent = 'generating...';
+      placeholder.appendChild(label);
+    }
+
+    card.appendChild(placeholder);
+    wrapper.appendChild(card);
+    return { wrapper, audio: null };
+  }
+
+  // Ready state — normal rendering
   const card = document.createElement('div');
   card.className = 'post-card';
   card.style.boxShadow = `0 0 30px ${post.color_hex}20, 0 0 60px ${post.color_hex}10`;

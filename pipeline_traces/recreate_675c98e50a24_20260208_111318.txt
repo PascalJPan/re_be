@@ -1,0 +1,179 @@
+================================================================================
+  PIPELINE TRACE — RECREATE
+  ID: 675c98e50a24  |  User: pascal  |  2026-02-08T11:13:18.643595
+================================================================================
+
+================================================================================
+ STEP 1: COLOR DERIVATION
+================================================================================
+
+Input hex: #cf3830
+
+{
+  "hex": "#cf3830",
+  "hue_category": "warm_red",
+  "saturation": 0.624,
+  "lightness": 0.5
+}
+
+================================================================================
+ STEP 2: IMAGE ANALYSIS (OpenAI Vision → gpt-5.2)
+================================================================================
+
+Input: user-uploaded image (binary)
+
+Output (ImageAnalysis):
+{
+  "scene_description": "A tightly framed portrait of an older man in a dark suit and red tie fills the space, his face lit by heavy, amber-red illumination that feels like heat radiating off a low lamp. The background falls into velvety shadow with a soft suggestion of drapery, creating shallow depth where the eyes and forehead lines sharpen like etched grooves against a smoky, muted field.",
+  "detected_objects": [
+    "human face (close-up portrait)",
+    "light-colored hair",
+    "dark suit jacket (wool-like fabric)",
+    "white dress shirt (cotton)",
+    "red necktie (silk-like sheen)",
+    "small lapel pin (metal, flag-shaped)",
+    "dark, blurred background",
+    "curtain/drapery (fabric, out of focus)"
+  ],
+  "vibe": "smoldering sepia gravity, lacquered tension, smoke-softened austerity, heat-hazed formality",
+  "emotion": "stern resolve edged with simmering impatience",
+  "dominant_colors": [
+    "burnt amber",
+    "rusty red",
+    "deep umber-brown",
+    "smoky charcoal",
+    "muted cream-white"
+  ],
+  "environment": "indoor",
+  "time_of_day": "null",
+  "location_hint": "a formal interior with drapery, suggestive of an office or staged portrait setting",
+  "ambient_sound_associations": [
+    "low HVAC hum under a closed-room hush",
+    "soft fabric rustle from suit shoulders shifting",
+    "a distant camera shutter click and faint lens motor whirr",
+    "subtle breath through the nose, controlled and steady",
+    "a muffled footstep in a carpeted corridor outside the room",
+    "quiet fluorescent ballast buzz or lamp filament hiss",
+    "the tiny metallic tick of a lapel pin brushing fabric"
+  ],
+  "sonic_metaphor": "A brass note held too long in a smoke-filled room, vibrating with heat while the air refuses to move."
+}
+
+================================================================================
+ STEP 3: SQUIGGLE FEATURE EXTRACTION
+================================================================================
+
+Output (SquiggleFeatures):
+{
+  "total_length": 0.836342,
+  "bounding_box_area": 0.051578,
+  "average_speed": 0.00037,
+  "speed_variance": 0.0,
+  "point_count": 137
+}
+
+================================================================================
+ STEP 4: IMAGE ENHANCEMENT PROMPT (OpenAI → gpt-5.2)
+================================================================================
+
+Input: ImageAnalysis + ColorInput + SquiggleFeatures
+
+Output (ImageEnhancementPrompt):
+{
+  "emotional_intent": "Transform the stern resolve into a searing, hallucinatory inferno of fractured memories and molten emotion.",
+  "visual_directive": "Dissolve the portrait into a chaotic collage of glitchy distortions, fiery spray-paint splatters, and molten glass shards with intense contrast and textured overlays.",
+  "morphing_prompt": "Create an artistically distorted image where the face is rendered with aggressive, thick impasto brush strokes and jagged glitch fragments. Incorporate fiery reds, burnt ambers, and smoky blacks to evoke heat and tension, adding layered collage textures and sharp, fractured edges that evoke chaos and heat radiance. Use painterly distortion combined with digital noise and scattered halftone patterns to transform the refined portrait into a dynamic, explosive visual storm while keeping the facial features recognizable.",
+  "style_reference": "Abstract expressionist explosion mixed with digital glitch art"
+}
+
+================================================================================
+ STEP 5: IMAGE MORPHING (OpenAI → gpt-image-1)
+================================================================================
+
+Input image: original + color overlay (Pillow)
+Prompt sent to gpt-image-1:
+
+  "Create an artistically distorted image where the face is rendered with aggressive, thick impasto brush strokes and jagged glitch fragments. Incorporate fiery reds, burnt ambers, and smoky blacks to evoke heat and tension, adding layered collage textures and sharp, fractured edges that evoke chaos and heat radiance. Use painterly distortion combined with digital noise and scattered halftone patterns to transform the refined portrait into a dynamic, explosive visual storm while keeping the facial features recognizable."
+
+Output: morphed image bytes (stored as post image) — SUCCESS
+
+================================================================================
+ STEP 6: AUDIO STRUCTURED OBJECT (OpenAI → gpt-5.2)
+================================================================================
+
+Input: ImageAnalysis + ColorInput + SquiggleFeatures
+
+Output (AudioStructuredObject):
+{
+  "audio_type": "music",
+  "mood": {
+    "primary": "serious",
+    "secondary": "tense"
+  },
+  "energy": 0.65,
+  "tempo": "medium",
+  "density": "medium",
+  "texture": [
+    "warm",
+    "rich",
+    "slightly tense"
+  ],
+  "sound_references": [
+    "brass instrument",
+    "soft fabric rustle",
+    "distant camera shutter",
+    "subtle breath"
+  ],
+  "duration_seconds": 18,
+  "bpm": 125,
+  "musical_key": "A minor",
+  "relation_to_parent": "original",
+  "confidence": 0.85,
+  "instruments": [
+    "muted trumpet",
+    "double bass",
+    "electric piano",
+    "brushes on snare"
+  ],
+  "genre_hint": "film noir jazz",
+  "harmonic_mood": "suspenseful, brooding",
+  "dynamic_shape": "slow build with subtle tension, slight crescendo at midpoint, then steady decay",
+  "sonic_palette": "warm, analog, slightly gritty with a hint of vintage brass warmth"
+}
+
+================================================================================
+ STEP 7: COMPILED PROMPT (deterministic logic)
+================================================================================
+
+Input: AudioStructuredObject + ColorInput + ImageAnalysis + SquiggleFeatures
+
+Output (prompt string sent to ElevenLabs):
+
+  "Instrumental music track. Genre: film noir jazz. Scene: A tightly framed portrait of an older man in a dark suit and red tie fills the space, his face lit by heavy, amber-red illumination that feels like heat radiating off a low lamp. The background falls into velvety shadow with a soft suggestion of drapery, creating shallow depth where the eyes and forehead lines sharpen like etched grooves against a smoky, muted field.. Vibe: smoldering sepia gravity, lacquered tension, smoke-softened austerity, heat-hazed formality. Setting: null indoor. Sounds like: A brass note held too long in a smoke-filled room, vibrating with heat while the air refuses to move.. Intensely surging, serious and tense mood with a warm and bold tonal palette, warm, rich, slightly tense textures, and sustained pads and slow drones. Instruments: muted trumpet, double bass, electric piano, brushes on snare. Timbre: warm, analog, slightly gritty with a hint of vintage brass warmth. Harmonic feel: suspenseful, brooding. Dynamic shape: slow build with subtle tension, slight crescendo at midpoint, then steady decay. Drawing from: brass instrument, soft fabric rustle, distant camera shutter, subtle breath. Make it musically engaging with clear rhythm and forward momentum. 125 BPM, in A minor, medium tempo, medium density, 18 seconds long. Instrumental only, no vocals, no lyrics."
+
+================================================================================
+ STEP 8: ELEVENLABS COMPOSITION PLAN (/v1/music/plan)
+================================================================================
+
+Request payload:
+{
+  "prompt": "Instrumental music track. Genre: film noir jazz. Scene: A tightly framed portrait of an older man in a dark suit and red tie fills the space, his face lit by heavy, amber-red illumination that feels like heat radiating off a low lamp. The background falls into velvety shadow with a soft suggestion of drapery, creating shallow depth where the eyes and forehead lines sharpen like etched grooves against a smoky, muted field.. Vibe: smoldering sepia gravity, lacquered tension, smoke-softened austerity, heat-hazed formality. Setting: null indoor. Sounds like: A brass note held too long in a smoke-filled room, vibrating with heat while the air refuses to move.. Intensely surging, serious and tense mood with a warm and bold tonal palette, warm, rich, slightly tense textures, and sustained pads and slow drones. Instruments: muted trumpet, double bass, electric piano, brushes on snare. Timbre: warm, analog, slightly gritty with a hint of vintage brass warmth. Harmonic feel: suspenseful, brooding. Dynamic shape: slow build with subtle tension, slight crescendo at midpoint, then steady decay. Drawing from: brass instrument, soft fabric rustle, distant camera shutter, subtle breath. Make it musically engaging with clear rhythm and forward momentum. 125 BPM, in A minor, medium tempo, medium density, 18 seconds long. Instrumental only, no vocals, no lyrics.",
+  "music_length_ms": 18000,
+  "prompt_influence": 0.85,
+  "force_instrumental": true
+}
+
+Response: composition_plan JSON (opaque, passed to next step)
+
+================================================================================
+ STEP 9: ELEVENLABS AUDIO GENERATION (/v1/music)
+================================================================================
+
+Request: { composition_plan: <from previous step>, output_format: "mp3" }
+
+Output: 675c98e50a24.mp3
+Saved to: backend/audio_files/675c98e50a24.mp3
+
+================================================================================
+  TRACE COMPLETE — 675c98e50a24.mp3
+================================================================================

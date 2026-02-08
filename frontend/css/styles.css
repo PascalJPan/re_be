@@ -92,23 +92,6 @@ a { color: var(--text); text-decoration: none; }
 }
 .nav-user:hover { color: var(--text); }
 
-.nav-logout-btn {
-  font-size: 0.75rem;
-  padding: 0.3rem 0.6rem;
-  border: none;
-  border-radius: 4px;
-  background: transparent;
-  color: var(--text-dim);
-  cursor: pointer;
-  box-shadow: var(--shadow-soft);
-}
-.nav-logout-btn:hover { color: var(--text); background: var(--surface); }
-
-.nav-auth-link {
-  font-size: 0.85rem;
-  color: var(--accent);
-}
-
 /* ==================== Main container ==================== */
 #app {
   max-width: 520px;
@@ -191,20 +174,6 @@ button.primary:hover { background: #444; }
   margin-bottom: 1rem;
 }
 
-.post-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.5rem;
-  padding: 0 0.25rem;
-}
-
-.post-card-row {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
 .post-card {
   background: var(--surface);
   border: none;
@@ -230,15 +199,6 @@ button.primary:hover { background: #444; }
   cursor: pointer;
   aspect-ratio: 1;
   object-fit: cover;
-}
-
-.post-card-star-col {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.25rem;
-  flex-shrink: 0;
-  padding: 0 0.25rem;
 }
 
 .username-link {
@@ -476,6 +436,8 @@ button.primary:hover { background: #444; }
   overflow: hidden;
 }
 .profile-grid-menu button {
+  display: block;
+  width: 100%;
   padding: 0.5rem 1rem;
   border: none;
   background: transparent;
@@ -484,8 +446,39 @@ button.primary:hover { background: #444; }
   cursor: pointer;
   box-shadow: none;
   white-space: nowrap;
+  text-align: left;
 }
 .profile-grid-menu button:hover { background: #fff0f0; box-shadow: none; }
+.profile-grid-menu-recreate { color: var(--text) !important; }
+.profile-grid-menu-recreate:hover { background: var(--surface2) !important; }
+
+.profile-grid-loading {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  z-index: 4;
+  border-radius: 12px;
+}
+.profile-grid-loading span {
+  color: #fff;
+  font-size: 0.75rem;
+}
+.profile-grid-loading .spinner {
+  width: 24px;
+  height: 24px;
+  border: 2.5px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
 
 /* ==================== Pagination ==================== */
 .pagination {
@@ -634,19 +627,37 @@ button.primary:hover { background: #444; }
 }
 
 .create-upload-prompt {
-  display: flex;
-  gap: 0.75rem;
-  align-items: center;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+  overflow: hidden;
 }
 
 .create-pick-btn, .create-camera-btn {
-  padding: 0.7rem 1.4rem;
-  border: none;
-  border-radius: 6px;
-  background: var(--surface);
-  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  box-shadow: var(--shadow-soft);
+  color: var(--text-dim);
+  transition: background 0.15s;
+}
+
+.create-pick-btn:hover, .create-camera-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.create-pick-btn svg, .create-camera-btn svg {
+  width: 48px;
+  height: 48px;
+}
+
+.create-upload-divider {
+  width: 1px;
+  background: var(--border);
 }
 
 .create-bottom-bar {
@@ -665,34 +676,8 @@ button.primary:hover { background: #444; }
   background: #888;
 }
 
-.create-generate-btn {
-  flex: 1;
-  max-width: 200px;
-}
-
-.create-result {
-  padding: 0.75rem;
-}
-
 .create-result-audio .audio-player {
   margin: 0;
-}
-
-.create-result-actions {
-  display: flex;
-  margin-top: 0.75rem;
-  justify-content: center;
-}
-
-.create-publish-btn {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  padding: 0;
-  font-size: 1.3rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .create-loading {
@@ -865,6 +850,69 @@ button.primary:hover { background: #444; }
     box-shadow: var(--shadow-soft);
     overflow: hidden;
   }
+}
+
+/* ==================== Generating state (shimmer placeholders) ==================== */
+.post-card-placeholder {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+.shimmer-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    110deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.15) 50%,
+    transparent 70%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.generating-label {
+  position: relative;
+  z-index: 1;
+  color: #fff;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  text-transform: lowercase;
+  animation: pulse 1.5s infinite;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.4);
+}
+
+.post-card-generating {
+  pointer-events: none;
+}
+
+/* Profile grid generating items */
+.profile-grid-item .shimmer-overlay {
+  border-radius: 12px;
+}
+
+.profile-grid-item .generating-label {
+  font-size: 0.65rem;
+  position: absolute;
+  bottom: 50%;
+  left: 50%;
+  transform: translate(-50%, 50%);
+}
+
+/* Clickable toast */
+.toast-clickable {
+  cursor: pointer;
+  pointer-events: auto;
 }
 
 /* ==================== Utility ==================== */

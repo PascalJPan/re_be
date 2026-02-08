@@ -1,0 +1,181 @@
+================================================================================
+  PIPELINE TRACE — POST
+  ID: 68a304c994ab  |  User: pascal  |  2026-02-08T09:39:09.592870
+================================================================================
+
+================================================================================
+ STEP 1: COLOR DERIVATION
+================================================================================
+
+Input hex: #43bc64
+
+{
+  "hex": "#43bc64",
+  "hue_category": "cool_green",
+  "saturation": 0.475,
+  "lightness": 0.5
+}
+
+================================================================================
+ STEP 2: IMAGE ANALYSIS (OpenAI Vision → gpt-5.2)
+================================================================================
+
+Input: user-uploaded image (binary)
+
+Output (ImageAnalysis):
+{
+  "scene_description": "A pair of rust-brown railway tracks run straight into a tunnel of dense green foliage, the perspective narrowing to a bright pin of daylight in the far distance. The light is cool and filtered, dappling the sleepers with leaf-shadow patterns while vines and weeds creep between the ties, softening the hard geometry of steel and wood. The space feels deep and hushed, like a corridor where the forest has begun to reclaim the line.",
+  "detected_objects": [
+    "railway tracks (steel rails)",
+    "wooden sleepers/ties",
+    "gravel ballast",
+    "overgrown weeds and vines",
+    "dense trees and shrubs",
+    "leaf canopy",
+    "scattered litter/debris"
+  ],
+  "vibe": "cool-damp verdant hush, mossy overgrowth pressure, dappled shadow-flicker, iron-and-wood stillness",
+  "emotion": "quiet suspense threaded with nostalgic abandonment",
+  "dominant_colors": [
+    "deep canopy green",
+    "fern-bright lime green",
+    "shadowed blue-green",
+    "rusted iron brown",
+    "weathered charcoal wood",
+    "pale distant sky-white"
+  ],
+  "environment": "outdoor",
+  "time_of_day": "afternoon",
+  "location_hint": "an overgrown railway cutting through a forest corridor",
+  "ambient_sound_associations": [
+    "leaf canopy rustling in layered gusts",
+    "insects ticking and whirring close to the ground",
+    "a single birdcall echoing down the track corridor",
+    "gravel shifting under a careful footstep",
+    "vines brushing and snapping softly against wood ties",
+    "a faint metallic ping from cooling rail steel",
+    "distant, muffled wind hiss at the bright opening ahead"
+  ],
+  "sonic_metaphor": "A long, narrow reverb of green\u2014like a muted train-whistle remembered through wet leaves and rusting strings."
+}
+
+================================================================================
+ STEP 3: SQUIGGLE FEATURE EXTRACTION
+================================================================================
+
+Output (SquiggleFeatures):
+{
+  "total_length": 0.034369,
+  "bounding_box_area": 0.000419,
+  "average_speed": 0.000142,
+  "speed_variance": 0.0,
+  "point_count": 15
+}
+
+================================================================================
+ STEP 4: IMAGE ENHANCEMENT PROMPT (OpenAI → gpt-5.2)
+================================================================================
+
+Input: ImageAnalysis + ColorInput + SquiggleFeatures
+
+Output (ImageEnhancementPrompt):
+{
+  "emotional_intent": "Turn the quiet suspense of abandonment into a ritual hush, as if the forest is slowly printing the railway into memory.",
+  "visual_directive": "Render the scene as a cool-green risograph field guide plate with botanical ink misregistration, grainy halftones, and crisp graphite geometry.",
+  "morphing_prompt": "Transform the photo into a vintage risograph print layered with scientific botanical illustration aesthetics: limited palette anchored in #43bc64 cool green, with charcoal-black rail geometry and rust-brown accents reduced to flat ink fields. Add visible paper tooth, dot-matrix halftone shading, and slight cyan/green misregistration so the foliage vibrates subtly while the tracks stay sharply drafted like an engineering diagram. Keep the distant pin of light as a blown-out, screen-printed void, and apply the effect most intensely along a small central band down the rails (matching the tight squiggle), letting the outer foliage fall into softer grain and ink bleed.",
+  "style_reference": "Risograph-printed vintage field guide + architectural blueprint linework, with botanical plate labeling vibes"
+}
+
+================================================================================
+ STEP 5: IMAGE MORPHING (OpenAI → gpt-image-1)
+================================================================================
+
+Input image: original + color overlay (Pillow)
+Prompt sent to gpt-image-1:
+
+  "Transform the photo into a vintage risograph print layered with scientific botanical illustration aesthetics: limited palette anchored in #43bc64 cool green, with charcoal-black rail geometry and rust-brown accents reduced to flat ink fields. Add visible paper tooth, dot-matrix halftone shading, and slight cyan/green misregistration so the foliage vibrates subtly while the tracks stay sharply drafted like an engineering diagram. Keep the distant pin of light as a blown-out, screen-printed void, and apply the effect most intensely along a small central band down the rails (matching the tight squiggle), letting the outer foliage fall into softer grain and ink bleed."
+
+Output: morphed image bytes (stored as post image) — SUCCESS
+
+================================================================================
+ STEP 6: AUDIO STRUCTURED OBJECT (OpenAI → gpt-5.2)
+================================================================================
+
+Input: ImageAnalysis + ColorInput + SquiggleFeatures
+
+Output (AudioStructuredObject):
+{
+  "audio_type": "music",
+  "mood": {
+    "primary": "hushed suspense",
+    "secondary": "nostalgic"
+  },
+  "energy": 0.38,
+  "tempo": "slow",
+  "density": "sparse",
+  "texture": [
+    "damped reverb tail",
+    "soft pulse",
+    "leafy granular shimmer",
+    "subtle metallic ticks"
+  ],
+  "sound_references": [
+    "canopy rustle swells",
+    "insect tick/whirr bed",
+    "distant single birdcall echo",
+    "faint rail-metal ping",
+    "gravel footstep crunch (very soft)"
+  ],
+  "duration_seconds": 18,
+  "bpm": 96,
+  "musical_key": "D minor",
+  "relation_to_parent": "original",
+  "confidence": 0.78,
+  "instruments": [
+    "felt piano",
+    "warm analog pad",
+    "brushy frame drum",
+    "bowed upright bass"
+  ],
+  "genre_hint": "cinematic downtempo",
+  "harmonic_mood": "suspended and slightly ominous, resolving only at the end",
+  "dynamic_shape": "quiet pulse emerges from near-silence, gently swells with rustling textures, then thins to a single ringing tone",
+  "sonic_palette": "cool-green, damp and organic; tape-softened transients with mossy reverb and occasional rusted-metal overtones"
+}
+
+================================================================================
+ STEP 7: COMPILED PROMPT (deterministic logic)
+================================================================================
+
+Input: AudioStructuredObject + ColorInput + ImageAnalysis + SquiggleFeatures
+
+Output (prompt string sent to ElevenLabs):
+
+  "Instrumental music track. Genre: cinematic downtempo. Scene: A pair of rust-brown railway tracks run straight into a tunnel of dense green foliage, the perspective narrowing to a bright pin of daylight in the far distance. The light is cool and filtered, dappling the sleepers with leaf-shadow patterns while vines and weeds creep between the ties, softening the hard geometry of steel and wood. The space feels deep and hushed, like a corridor where the forest has begun to reclaim the line.. Vibe: cool-damp verdant hush, mossy overgrowth pressure, dappled shadow-flicker, iron-and-wood stillness. Setting: afternoon outdoor. Sounds like: A long, narrow reverb of green—like a muted train-whistle remembered through wet leaves and rusting strings.. Driving and pulsing, hushed suspense and nostalgic mood with a organic and verdant tonal palette, damped reverb tail, soft pulse, leafy granular shimmer, subtle metallic ticks textures, and sustained pads and slow drones with focused simplicity. Instruments: felt piano, warm analog pad, brushy frame drum, bowed upright bass. Timbre: cool-green, damp and organic; tape-softened transients with mossy reverb and occasional rusted-metal overtones. Harmonic feel: suspended and slightly ominous, resolving only at the end. Dynamic shape: quiet pulse emerges from near-silence, gently swells with rustling textures, then thins to a single ringing tone. Drawing from: canopy rustle swells, insect tick/whirr bed, distant single birdcall echo, faint rail-metal ping, gravel footstep crunch (very soft). Make it musically engaging with clear rhythm and forward momentum. 96 BPM, in D minor, slow tempo, sparse density, 18 seconds long. Instrumental only, no vocals, no lyrics."
+
+================================================================================
+ STEP 8: ELEVENLABS COMPOSITION PLAN (/v1/music/plan)
+================================================================================
+
+Request payload:
+{
+  "prompt": "Instrumental music track. Genre: cinematic downtempo. Scene: A pair of rust-brown railway tracks run straight into a tunnel of dense green foliage, the perspective narrowing to a bright pin of daylight in the far distance. The light is cool and filtered, dappling the sleepers with leaf-shadow patterns while vines and weeds creep between the ties, softening the hard geometry of steel and wood. The space feels deep and hushed, like a corridor where the forest has begun to reclaim the line.. Vibe: cool-damp verdant hush, mossy overgrowth pressure, dappled shadow-flicker, iron-and-wood stillness. Setting: afternoon outdoor. Sounds like: A long, narrow reverb of green\u2014like a muted train-whistle remembered through wet leaves and rusting strings.. Driving and pulsing, hushed suspense and nostalgic mood with a organic and verdant tonal palette, damped reverb tail, soft pulse, leafy granular shimmer, subtle metallic ticks textures, and sustained pads and slow drones with focused simplicity. Instruments: felt piano, warm analog pad, brushy frame drum, bowed upright bass. Timbre: cool-green, damp and organic; tape-softened transients with mossy reverb and occasional rusted-metal overtones. Harmonic feel: suspended and slightly ominous, resolving only at the end. Dynamic shape: quiet pulse emerges from near-silence, gently swells with rustling textures, then thins to a single ringing tone. Drawing from: canopy rustle swells, insect tick/whirr bed, distant single birdcall echo, faint rail-metal ping, gravel footstep crunch (very soft). Make it musically engaging with clear rhythm and forward momentum. 96 BPM, in D minor, slow tempo, sparse density, 18 seconds long. Instrumental only, no vocals, no lyrics.",
+  "music_length_ms": 18000,
+  "prompt_influence": 0.85,
+  "force_instrumental": true
+}
+
+Response: composition_plan JSON (opaque, passed to next step)
+
+================================================================================
+ STEP 9: ELEVENLABS AUDIO GENERATION (/v1/music)
+================================================================================
+
+Request: { composition_plan: <from previous step>, output_format: "mp3" }
+
+Output: 68a304c994ab.mp3
+Saved to: backend/audio_files/68a304c994ab.mp3
+
+================================================================================
+  TRACE COMPLETE — 68a304c994ab.mp3
+================================================================================
