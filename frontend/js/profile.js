@@ -1,6 +1,7 @@
 import * as api from './api.js';
+import { getUser } from './auth.js';
 import { navigate } from './router.js';
-import { timeAgo } from './ui.js';
+import { timeAgo, toast } from './ui.js';
 
 export function render(container, username) {
   container.innerHTML = '<div class="feed-loading">Loading...</div>';
@@ -31,6 +32,8 @@ async function loadProfile(container, username, page) {
       return;
     }
 
+    const isOwnProfile = getUser().username === data.user.username;
+
     const grid = document.createElement('div');
     grid.className = 'profile-grid';
 
@@ -54,6 +57,17 @@ async function loadProfile(container, username, page) {
       overlay.className = 'profile-grid-overlay';
       overlay.textContent = post.comment_count > 0 ? `${post.comment_count}` : '';
       cell.appendChild(overlay);
+
+      if (isOwnProfile) {
+        const menuBtn = document.createElement('button');
+        menuBtn.className = 'profile-grid-menu-btn';
+        menuBtn.textContent = '\u2026';
+        menuBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          showPostMenu(cell, post.id, container, username, page);
+        });
+        cell.appendChild(menuBtn);
+      }
 
       cell.addEventListener('click', () => navigate(`/post/${post.id}`));
       grid.appendChild(cell);
@@ -85,4 +99,34 @@ async function loadProfile(container, username, page) {
   } catch (e) {
     container.innerHTML = `<div class="error-msg">${e.message}</div>`;
   }
+}
+
+function showPostMenu(cell, postId, container, username, page) {
+  document.querySelectorAll('.profile-grid-menu').forEach(m => m.remove());
+
+  const menu = document.createElement('div');
+  menu.className = 'profile-grid-menu';
+
+  const deleteBtn = document.createElement('button');
+  deleteBtn.textContent = 'Delete';
+  deleteBtn.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    menu.remove();
+    try {
+      await api.deletePost(postId);
+      loadProfile(container, username, page);
+    } catch (err) {
+      toast(err.message, true);
+    }
+  });
+  menu.appendChild(deleteBtn);
+  cell.appendChild(menu);
+
+  const close = (e) => {
+    if (!menu.contains(e.target)) {
+      menu.remove();
+      document.removeEventListener('click', close);
+    }
+  };
+  setTimeout(() => document.addEventListener('click', close), 0);
 }

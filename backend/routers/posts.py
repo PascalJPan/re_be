@@ -1,4 +1,5 @@
 import json
+import logging
 import math
 import uuid
 from pathlib import Path
@@ -15,6 +16,7 @@ from backend.models.schemas import (
     CommentDetail,
     FeedResponse,
     ImageAnalysis,
+    ImageEnhancementPrompt,
     PostCreateResponse,
     PostDetail,
     PostSummary,
@@ -23,9 +25,13 @@ from backend.models.schemas import (
 )
 from backend.services.audio_generator import generate_audio
 from backend.services.image_analysis import analyze_image
+from backend.services.image_morpher import generate_enhancement_prompt, morph_image
 from backend.services.prompt_compiler import compile_prompt
 from backend.services.prompt_object_generator import generate_audio_object
+from backend.services.pipeline_trace import write_trace
 from backend.services.squiggle_extraction import extract_features
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["posts"])
 
@@ -65,6 +71,27 @@ async def create_post(
 
     squiggle_features = extract_features(points)
 
+    # --- Image morphing pipeline (posts only) ---
+    enhancement = None
+    final_image_bytes = image_bytes
+    morph_status = None
+    try:
+        enhancement = await generate_enhancement_prompt(image_analysis, color, squiggle_features)
+        logger.info("Enhancement prompt: %s", enhancement.model_dump_json())
+    except Exception as e:
+        logger.warning("Enhancement prompt generation failed, skipping morph: %s", e)
+        morph_status = f"failed:enhancement_prompt:{e}"
+
+    if enhancement is not None:
+        try:
+            final_image_bytes = await morph_image(image_bytes, color, enhancement)
+            logger.info("Image morphing succeeded (%d bytes)", len(final_image_bytes))
+            morph_status = "success"
+        except Exception as e:
+            logger.warning("Image morphing failed, using original image: %s", e)
+            final_image_bytes = image_bytes
+            morph_status = f"failed:morph:{e}"
+
     try:
         structured_object = await generate_audio_object(image_analysis, color, squiggle_features)
     except Exception as e:
@@ -78,25 +105,48 @@ async def create_post(
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"Audio generation failed: {e}")
 
+    enhancement_json = enhancement.model_dump_json() if enhancement else ""
+
     db = get_db()
     await db.execute(
         """INSERT INTO posts (id, user_id, image_data, squiggle_points, color_hex,
-           structured_object, image_analysis, squiggle_features, compiled_prompt, audio_filename)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+           structured_object, image_analysis, squiggle_features, compiled_prompt,
+           enhancement_prompt, audio_filename)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
         (
             post_id,
             user["id"],
-            image_bytes,
+            final_image_bytes,
             json.dumps(raw_points),
             color_hex,
             structured_object.model_dump_json(),
             image_analysis.model_dump_json(),
             squiggle_features.model_dump_json(),
             prompt_text,
+            enhancement_json,
             audio_filename,
         ),
     )
     await db.commit()
+
+    try:
+        trace_path = write_trace(
+            trace_type="post",
+            item_id=post_id,
+            username=user["username"],
+            color_hex=color_hex,
+            color=color,
+            image_analysis=image_analysis,
+            squiggle_features=squiggle_features,
+            structured_object=structured_object,
+            compiled_prompt=prompt_text,
+            audio_filename=audio_filename,
+            enhancement_prompt=enhancement,
+            morph_status=morph_status,
+        )
+        logger.info("Pipeline trace saved: %s", trace_path)
+    except Exception as e:
+        logger.warning("Failed to write pipeline trace: %s", e)
 
     row = await db.execute_fetchall(
         "SELECT created_at FROM posts WHERE id = ?", (post_id,)
@@ -114,6 +164,8 @@ async def create_post(
             image_analysis=image_analysis,
             squiggle_features=squiggle_features,
             compiled_prompt=prompt_text,
+            enhancement_prompt=enhancement,
+            morph_status=morph_status,
             comments=[],
             created_at=created_at,
         )
@@ -158,7 +210,7 @@ async def get_post(post_id: str):
     rows = await db.execute_fetchall(
         """SELECT p.id, u.username, p.audio_filename, p.color_hex,
            p.structured_object, p.image_analysis, p.squiggle_features,
-           p.compiled_prompt, p.created_at
+           p.compiled_prompt, p.enhancement_prompt, p.created_at
            FROM posts p JOIN users u ON p.user_id = u.id
            WHERE p.id = ?""",
         (post_id,),
@@ -199,6 +251,14 @@ async def get_post(post_id: str):
         for cr in comment_rows
     ]
 
+    enhancement_raw = r[8]
+    enhancement = None
+    if enhancement_raw:
+        try:
+            enhancement = ImageEnhancementPrompt(**json.loads(enhancement_raw))
+        except (json.JSONDecodeError, TypeError):
+            pass
+
     return PostDetail(
         id=r[0],
         username=r[1],
@@ -209,8 +269,9 @@ async def get_post(post_id: str):
         image_analysis=_parse_json(r[5], ImageAnalysis, "post image_analysis"),
         squiggle_features=_parse_json(r[6], SquiggleFeatures, "post squiggle_features"),
         compiled_prompt=r[7],
+        enhancement_prompt=enhancement,
         comments=comments,
-        created_at=r[8],
+        created_at=r[9],
     )
 
 
@@ -223,9 +284,16 @@ async def get_post_image(post_id: str):
     if not rows:
         raise HTTPException(status_code=404, detail="Post not found")
 
+    data = rows[0][0]
+    # Detect PNG vs JPEG from magic bytes
+    if data[:4] == b"\x89PNG":
+        media_type = "image/png"
+    else:
+        media_type = "image/jpeg"
+
     return Response(
-        content=rows[0][0],
-        media_type="image/jpeg",
+        content=data,
+        media_type=media_type,
         headers={"Cache-Control": "public, max-age=86400"},
     )
 

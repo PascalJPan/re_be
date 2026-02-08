@@ -1,0 +1,761 @@
+================================================================================
+                    re_be — AI MUSIC PIPELINE: FULL DATA FLOW
+================================================================================
+
+User uploads an image, draws a squiggle gesture, and picks a color.
+The system turns that into a generated music clip via OpenAI + ElevenLabs.
+
+Below is every step, every prompt, every JSON structure, in order.
+
+
+================================================================================
+ STEP 0: USER INPUT
+================================================================================
+
+  - image:           Raw image bytes (JPEG/PNG/WebP/GIF, max 10 MB)
+  - squiggle_points: Array of {x, y, t} touch points (normalized 0-1, ms timestamps)
+  - color_hex:       Hex color string picked from the squiggle endpoint (e.g. "#FF6B35")
+
+
+================================================================================
+ STEP 1: COLOR DERIVATION — ColorInput.from_hex()
+================================================================================
+
+  File: backend/models/schemas.py
+  Function: ColorInput.from_hex(hex_str)
+
+  Converts RGB hex → HLS, then maps hue degree to a category:
+
+    Hue Range       Category
+    ─────────       ────────
+    345°-360°, 0°-15°   warm_red
+    15°-45°              warm_orange
+    45°-70°              warm_yellow
+    70°-160°             cool_green
+    160°-200°            cool_cyan
+    200°-260°            cool_blue
+    260°-290°            cool_purple
+    290°-345°            warm_magenta
+    saturation < 0.1     neutral_gray
+
+  INPUT:  "#FF6B35"
+  OUTPUT:
+  {
+    "hex": "#FF6B35",
+    "hue_category": "warm_orange",
+    "saturation": 0.797,
+    "lightness": 0.604
+  }
+
+
+================================================================================
+ STEP 2: IMAGE ANALYSIS — analyze_image()
+================================================================================
+
+  File: backend/services/image_analysis.py
+  Function: analyze_image(image_bytes, content_type)
+  API: OpenAI Chat Completions (gpt-5.2, vision)
+  Temperature: 0.4 | Max tokens: 1024 | Response format: JSON
+
+  ── SYSTEM PROMPT (sent to OpenAI) ──────────────────────────────────────────
+
+  You are a synesthetic image analyst specializing in translating visual
+  scenes into sonic descriptions. Analyze the provided image and return a
+  JSON object with exactly these fields:
+
+  {
+    "scene_description": "A vivid 2-3 sentence description of the scene,
+      emphasizing sensory texture, light quality, and spatial depth",
+    "detected_objects": ["list", "of", "key", "objects", "and", "materials"],
+    "vibe": "3-4 sensory adjectives describing atmosphere — go beyond basic
+      (e.g. 'hazy golden intimacy' not 'warm')",
+    "emotion": "A compound, specific emotional response (e.g. 'bittersweet
+      longing' or 'restless anticipation', not just 'sad' or 'happy')",
+    "dominant_colors": ["list", "of", "specific", "color", "descriptions"],
+    "environment": "indoor/outdoor/abstract/null",
+    "time_of_day": "dawn/morning/afternoon/dusk/night/null",
+    "location_hint": "Brief location description or null",
+    "ambient_sound_associations": ["5-8 specific sounds you'd hear in this
+      scene — be concrete (e.g. 'distant foghorn', 'leather creaking',
+      'ice cracking in a glass')"],
+    "sonic_metaphor": "If this image were a sound, what would it be? One
+      evocative sentence (e.g. 'A cello note sustained underwater' or
+      'Static between radio stations at 3am')"
+  }
+
+  Rules:
+  - Be emotionally specific, not generic. Avoid single-word emotions.
+  - For vibe, layer adjectives that evoke texture and temperature, not just mood.
+  - For ambient_sound_associations, list 5-8 concrete, specific sounds —
+    avoid generic entries like "nature sounds" or "city noise".
+  - The sonic_metaphor should be poetic and surprising, capturing the image's
+    essence as pure sound.
+  - Focus on sensory qualities that translate to audio generation.
+  Return ONLY the JSON object, no other text.
+
+  ── USER MESSAGE ────────────────────────────────────────────────────────────
+
+  [The uploaded image, sent as base64 data URL in an image_url content block]
+
+  ── EXAMPLE OUTPUT (ImageAnalysis) ──────────────────────────────────────────
+
+  {
+    "scene_description": "A sunlit gallery with white walls and wooden floors,
+      dust particles dancing in golden beams streaming through tall windows.",
+    "detected_objects": ["paintings", "wooden frames", "polished floor",
+      "natural light", "dust particles"],
+    "vibe": "hazy golden intimacy, quiet reverence, timeless stillness",
+    "emotion": "bittersweet longing, peaceful contemplation",
+    "dominant_colors": ["warm honey gold", "deep umber shadow",
+      "bright chalk white"],
+    "environment": "indoor",
+    "time_of_day": "afternoon",
+    "location_hint": "art gallery or museum",
+    "ambient_sound_associations": [
+      "distant footsteps echoing on hardwood",
+      "gentle air circulation hum",
+      "faint canvas rustling",
+      "wooden floor creaking under weight",
+      "muffled conversation from another room",
+      "camera shutter clicking softly"
+    ],
+    "sonic_metaphor": "A cello note sustained underwater with dust particles
+      as tremolo"
+  }
+
+
+================================================================================
+ STEP 3: SQUIGGLE FEATURE EXTRACTION — extract_features()
+================================================================================
+
+  File: backend/services/squiggle_extraction.py
+  Function: extract_features(points)
+  Pure math — no AI calls.
+
+  Calculations:
+    total_length     = sum of Euclidean distances between consecutive points
+    bounding_box_area = (max_x - min_x) * (max_y - min_y)
+    average_speed    = mean of (distance / time_delta) per segment
+    speed_variance   = variance of per-segment speeds
+    point_count      = number of SquigglePoint entries
+
+  INPUT:  [{"x": 0.1, "y": 0.2, "t": 0}, {"x": 0.5, "y": 0.8, "t": 150}, ...]
+  OUTPUT (SquiggleFeatures):
+  {
+    "total_length": 2.345670,
+    "bounding_box_area": 0.156234,
+    "average_speed": 0.003421,
+    "speed_variance": 0.000018,
+    "point_count": 87
+  }
+
+
+================================================================================
+ STEP 4 (POSTS ONLY): IMAGE ENHANCEMENT PROMPT — generate_enhancement_prompt()
+================================================================================
+
+  File: backend/services/image_morpher.py
+  Function: generate_enhancement_prompt(image_analysis, color, squiggle)
+  API: OpenAI Chat Completions (gpt-5.2)
+  Temperature: 0.4 | Max tokens: 512 | Response format: JSON
+
+  ── SYSTEM PROMPT (sent to OpenAI) ──────────────────────────────────────────
+
+  You are a visual emotion amplifier. Given an image analysis, a user-selected
+  color, and squiggle gesture features, generate a creative image enhancement
+  prompt that will be used to emotionally morph the original image.
+
+  Your goal is to amplify the emotional essence of the image — not change the
+  subject, but transform its mood, atmosphere, and visual energy.
+
+  OUTPUT SCHEMA (return ONLY this JSON, no other text):
+  {
+    "emotional_intent": "A 1-sentence description of the emotional
+      transformation goal (e.g. 'Amplify the quiet melancholy into a
+      dreamlike ache')",
+    "visual_directive": "A 1-sentence instruction for color grading and
+      atmosphere (e.g. 'Shift toward deep amber tones with soft vignetting
+      and hazy light')",
+    "morphing_prompt": "A 2-3 sentence creative prompt for an image editor
+      AI. Describe the visual transformation without changing the subject
+      matter. Focus on light, color, texture, atmosphere, and emotional
+      amplification.",
+    "style_reference": "A brief style/aesthetic reference (e.g. 'Wong Kar-wai
+      cinematography', 'Polaroid expired film', 'Blade Runner neon noir')"
+  }
+
+  MAPPING RULES:
+
+  1. EMOTION -> AMPLIFICATION DIRECTION:
+     - Melancholy/nostalgia -> deepen shadows, add film grain, desaturate
+       slightly, warm or cool shift
+     - Joy/energy -> increase saturation, brighten highlights, add warmth
+       and glow
+     - Mystery/tension -> increase contrast, deepen blacks, add atmospheric
+       haze
+     - Serenity/calm -> soften everything, reduce contrast, add ethereal light
+     - Anger/intensity -> push reds and oranges, increase grain, harsh contrast
+
+  2. COLOR -> GRADING GUIDANCE:
+     - warm_red, warm_orange -> lean into warm color grading, golden hour feel
+     - cool_blue, cool_cyan -> lean into cool tones, twilight or moonlit feel
+     - cool_purple, warm_magenta -> lean into dreamy/surreal palette
+     - warm_yellow, cool_green -> lean into natural/organic palette
+     - neutral_gray -> lean into monochromatic or desaturated treatment
+     - High saturation -> more dramatic color shifts
+     - Low saturation -> subtler, more tonal shifts
+
+  3. SQUIGGLE -> VISUAL ENERGY:
+     - High speed/energy -> more dynamic transformations, visible texture,
+       motion blur effects
+     - Low speed/energy -> gentler, more ambient transformations
+     - High bounding box -> more expansive visual changes
+     - Low bounding box -> more focused, subtle changes
+
+  4. IMPORTANT CONSTRAINTS:
+     - NEVER ask to add or remove objects from the image
+     - NEVER change the fundamental subject or composition
+     - Focus ONLY on mood, atmosphere, light, color, and texture
+     - The morphing_prompt must work as an image editing instruction
+     - Keep the style_reference to real aesthetic movements or artists
+
+  ── USER MESSAGE ────────────────────────────────────────────────────────────
+
+  {
+    "image_analysis": { ...ImageAnalysis from Step 2... },
+    "color": { ...ColorInput from Step 1... },
+    "squiggle_features": { ...SquiggleFeatures from Step 3... }
+  }
+
+  ── EXAMPLE OUTPUT (ImageEnhancementPrompt) ─────────────────────────────────
+
+  {
+    "emotional_intent": "Deepen the contemplative atmosphere into a dreamlike
+      meditation on memory and light",
+    "visual_directive": "Shift toward warm amber and deep shadow tones with
+      soft vignetting and ethereal light diffusion",
+    "morphing_prompt": "Transform this gallery scene to feel more dreamlike
+      and ethereal. Increase the atmospheric haze, deepen the shadows into
+      warm amber tones, and add soft diffuse light as if seen through an old
+      photograph. Enhance the golden hour warmth while maintaining the quiet,
+      reverent mood.",
+    "style_reference": "Wong Kar-wai cinematography with expired Polaroid
+      film aesthetic"
+  }
+
+
+================================================================================
+ STEP 5 (POSTS ONLY): IMAGE MORPHING — morph_image()
+================================================================================
+
+  File: backend/services/image_morpher.py
+  Function: morph_image(image_bytes, color, enhancement_prompt)
+  API: OpenAI Images Edit (gpt-image-1)
+
+  Processing:
+    1. Load image as RGBA
+    2. Create solid color overlay:
+       - Color: the user's selected hex color
+       - Opacity: int(255 * (0.10 + 0.20 * saturation))
+         i.e. 10-30% based on color saturation
+    3. Alpha-composite overlay onto original image
+    4. Convert composited image to PNG
+
+  API Call:
+    - Model: gpt-image-1
+    - Endpoint: images.edit
+    - image: the composited PNG
+    - prompt: enhancement_prompt.morphing_prompt (from Step 4)
+    - response_format: b64_json
+
+  INPUT:
+    image = <composited PNG bytes>
+    prompt = "Transform this gallery scene to feel more dreamlike and
+      ethereal. Increase the atmospheric haze, deepen the shadows into warm
+      amber tones, and add soft diffuse light as if seen through an old
+      photograph. Enhance the golden hour warmth while maintaining the quiet,
+      reverent mood."
+
+  OUTPUT: Morphed image bytes (the post's displayed image)
+
+
+================================================================================
+ STEP 6: AUDIO STRUCTURED OBJECT — generate_audio_object()
+================================================================================
+
+  File: backend/services/prompt_object_generator.py
+  Function: generate_audio_object(image_analysis, color, squiggle, parent=None)
+  API: OpenAI Chat Completions (gpt-5.2)
+  Temperature: 0.4 | Max tokens: 1024 | Response format: JSON
+
+  ── SYSTEM PROMPT (sent to OpenAI) ──────────────────────────────────────────
+
+  You are an audio-intent generator. Given image analysis, a user-selected
+  color, and squiggle gesture features, produce a JSON object that describes
+  a short audio clip.
+
+  IMPORTANT: Prefer audio_type "music" in most cases. Only choose "ambient"
+  for scenes that are explicitly still, environmental, and non-rhythmic.
+  "hybrid" should be rare.
+
+  OUTPUT SCHEMA (return ONLY this JSON, no other text):
+  {
+    "audio_type": "music" | "ambient" | "hybrid",
+    "mood": {"primary": "string", "secondary": "string"},
+    "energy": 0.0-1.0,
+    "tempo": "slow" | "medium" | "fast",
+    "density": "sparse" | "medium" | "dense",
+    "texture": ["list", "of", "texture", "descriptors"],
+    "sound_references": ["concrete", "sound", "references"],
+    "duration_seconds": 15-20,
+    "bpm": 60-180,
+    "musical_key": "C major" | "A minor" | etc.,
+    "relation_to_parent": "original" | "mirror" | "variation" | "contrast",
+    "confidence": 0.0-1.0,
+    "instruments": ["2-4 specific instruments, e.g. Rhodes piano, bowed bass,
+      brushed snare"],
+    "genre_hint": "one genre/subgenre reference, e.g. lo-fi jazz, post-rock,
+      ambient techno",
+    "harmonic_mood": "harmonic character, e.g. yearning, suspended, resolving,
+      bittersweet",
+    "dynamic_shape": "how energy evolves, e.g. slow build, breathing,
+      explosion then decay",
+    "sonic_palette": "timbral character, e.g. dusty vinyl warmth, crystalline
+      digital, tape-saturated"
+  }
+
+  MAPPING RULES (priority order):
+
+  1. IMAGE ANALYSIS (highest priority):
+     - scene_description + vibe + emotion -> audio_type, mood, harmonic_mood
+     - ambient_sound_associations -> sound_references
+     - sonic_metaphor (if present) -> use it to inspire instruments,
+       sonic_palette, and dynamic_shape
+     - Urban/energetic scenes -> "music"
+     - Abstract scenes -> "music" (default)
+     - Outdoor/nature scenes with rhythmic or emotional energy -> "music"
+     - Only purely still, meditative, environmental scenes -> "ambient"
+     - When in doubt, default to "music"
+
+  2. COLOR (high priority):
+     - warm_red, warm_orange, warm_magenta -> warmer mood tones, bold textures
+     - cool_blue, cool_cyan, cool_purple -> cooler mood tones, smoother
+       textures
+     - warm_yellow, cool_green -> balanced/organic textures
+     - neutral_gray -> muted, minimal textures
+     - High saturation -> more vivid/intense mood
+     - Low saturation -> more subdued mood
+     - High lightness -> brighter, airier sound
+     - Low lightness -> darker, deeper sound
+
+  3. SQUIGGLE FEATURES (fine-grained):
+     - average_speed HIGH (>0.005) -> higher energy, tempo="fast"
+     - average_speed LOW (<0.001) -> lower energy, tempo="slow"
+     - bounding_box_area HIGH (>0.2) -> density="dense"
+     - bounding_box_area LOW (<0.05) -> density="sparse"
+     - speed_variance HIGH -> more varied texture list
+     - total_length HIGH (>2.0) -> more complex/layered textures
+     - total_length LOW (<0.5) -> simpler, focused textures
+
+  4. DURATION: Simple scenes -> 15s. Complex emotional scenes -> 20s.
+
+  5. BPM: Map from tempo — slow->60-90, medium->90-130, fast->130-180.
+     Pick a specific integer.
+
+  6. MUSICAL KEY: Choose based on mood and color. Warm/happy -> major keys
+     (C, G, D, A major). Cool/melancholic -> minor keys (A, D, E, B minor).
+     Mysterious/dark -> Eb minor, F# minor. Bright/energetic -> E major,
+     Bb major.
+
+  7. INSTRUMENTS: Choose 2-4 specific instruments that match the scene:
+     - Natural/organic scenes -> acoustic instruments (acoustic guitar, cello,
+       kalimba, wooden flute)
+     - Urban/modern scenes -> electronic instruments (analog synth, drum
+       machine, electric bass)
+     - Warm colors -> warm-toned instruments (Rhodes piano, flugelhorn,
+       upright bass)
+     - Cool colors -> crystalline instruments (vibraphone, glass marimba,
+       digital pads)
+     - Be specific: "nylon-string guitar" not just "guitar", "808 kick" not
+       just "drums"
+
+  8. GENRE HINT: Pick one genre/subgenre that fits the overall feel. Be
+     specific (e.g. "shoegaze" not "rock").
+
+  9. SONIC PALETTE: Describe the timbral quality — think about whether it's
+     warm/cold, analog/digital, clean/distorted, wet/dry.
+
+  10. DYNAMIC SHAPE: How should the energy evolve over the track's duration?
+      Consider the squiggle's gesture as a clue.
+
+  If relation_to_parent is "original", this is a new post (not a comment).
+
+  ── ADDITIONAL PROMPT FOR COMMENTS ──────────────────────────────────────────
+
+  (Appended when parent is provided)
+
+  COMMENT MODE: A parent audio object is provided. You MUST:
+  - Keep the comment sonically related to the parent
+  - Use the SAME bpm, musical_key, and duration_seconds as the parent
+  - Set relation_to_parent to "mirror", "variation", or "contrast"
+    (NEVER "original")
+  - "mirror": very similar mood/energy/texture, slight shifts
+  - "variation": same family but noticeably different energy or texture
+  - "contrast": intentionally different mood or energy, but still connected
+    through shared sound_references or texture elements
+
+  ── USER MESSAGE ────────────────────────────────────────────────────────────
+
+  For posts:
+  {
+    "image_analysis": { ...ImageAnalysis from Step 2... },
+    "color": { ...ColorInput from Step 1... },
+    "squiggle_features": { ...SquiggleFeatures from Step 3... }
+  }
+
+  For comments (includes parent):
+  {
+    "image_analysis": { ...ImageAnalysis from Step 2... },
+    "color": { ...ColorInput from Step 1... },
+    "squiggle_features": { ...SquiggleFeatures from Step 3... },
+    "parent_audio_object": { ...parent post's AudioStructuredObject... }
+  }
+
+  ── POST-PROCESSING (code-side) ─────────────────────────────────────────────
+
+  For comments, after GPT returns the object, the code force-overrides:
+    - duration_seconds = parent.duration_seconds
+    - bpm = parent.bpm (if parent has one)
+    - musical_key = parent.musical_key (if parent has one)
+
+  ── EXAMPLE OUTPUT (AudioStructuredObject) ──────────────────────────────────
+
+  {
+    "audio_type": "music",
+    "mood": {
+      "primary": "contemplative",
+      "secondary": "yearning"
+    },
+    "energy": 0.35,
+    "tempo": "slow",
+    "density": "medium",
+    "texture": ["ethereal pads", "sustained strings", "soft shimmer"],
+    "sound_references": ["distant footsteps", "canvas rustling",
+      "wooden floor creaking", "camera shutter"],
+    "duration_seconds": 18,
+    "bpm": 72,
+    "musical_key": "A minor",
+    "relation_to_parent": "original",
+    "confidence": 0.89,
+    "instruments": ["cello", "vibraphone", "analog pad", "brushed snare"],
+    "genre_hint": "chamber ambient",
+    "harmonic_mood": "suspended, yearning",
+    "dynamic_shape": "slow breathing build",
+    "sonic_palette": "dusty vinyl warmth with crystalline shimmer"
+  }
+
+
+================================================================================
+ STEP 7: PROMPT COMPILATION — compile_prompt()
+================================================================================
+
+  File: backend/services/prompt_compiler.py
+  Function: compile_prompt(obj, color, image_analysis, squiggle)
+  Pure logic — no AI calls. Translates all structured data into a single
+  natural-language prompt string for ElevenLabs.
+
+  ── MAPPING LOGIC ───────────────────────────────────────────────────────────
+
+  COLOR -> TONAL PALETTE:
+    warm_red       -> "warm and bold"
+    warm_orange    -> "warm and earthy"
+    warm_yellow    -> "bright and radiant"
+    warm_magenta   -> "warm and lush"
+    cool_blue      -> "cool and ethereal"
+    cool_cyan      -> "crisp and spacious"
+    cool_purple    -> "deep and mysterious"
+    cool_green     -> "organic and verdant"
+    neutral_gray   -> "muted and minimal"
+    + saturation > 0.7  -> append ", vivid"
+    + saturation < 0.3  -> append ", subdued"
+    + lightness > 0.7   -> append ", airy"
+    + lightness < 0.3   -> append ", dark"
+
+  SQUIGGLE -> RHYTHMIC CHARACTER:
+    avg_speed > 0.005 AND variance > 0.00002  -> "erratic, percussive rhythms"
+    avg_speed > 0.005 AND variance <= 0.00002 -> "driving, steady rhythms"
+    avg_speed < 0.001                         -> "sustained pads and slow drones"
+    otherwise                                 -> "flowing, melodic phrases"
+    + total_length > 2.0  -> append " with layered complexity"
+    + total_length < 0.5  -> append " with focused simplicity"
+
+  ENERGY -> DESCRIPTOR:
+    < 0.15   -> "barely breathing"
+    < 0.30   -> "gently simmering"
+    < 0.50   -> "quietly building"
+    < 0.70   -> "warmly pulsing"
+    < 0.85   -> "intensely surging"
+    >= 0.85  -> "explosively energetic"
+
+  ── PROMPT TEMPLATE ─────────────────────────────────────────────────────────
+
+  Instrumental {audio_type} track. Genre: {genre_hint}.
+  Scene: {scene_description}. Vibe: {vibe}.
+  Setting: {time_of_day} {environment}.
+  Sounds like: {sonic_metaphor}.
+  {Energy_desc}, {mood.primary} and {mood.secondary} mood
+  with a {color_tone} tonal palette,
+  {texture} textures, and {rhythm_desc}.
+  Instruments: {instruments}.
+  Timbre: {sonic_palette}.
+  Harmonic feel: {harmonic_mood}.
+  Dynamic shape: {dynamic_shape}.
+  Drawing from: {sound_references}.
+  {bpm} BPM, in {musical_key}, {tempo} tempo, {density} density,
+  {duration_seconds} seconds long.
+  Instrumental only, no vocals, no lyrics.
+
+  ── EXAMPLE OUTPUT (compiled prompt string) ─────────────────────────────────
+
+  "Instrumental music track. Genre: chamber ambient. Scene: A sunlit gallery
+  with white walls and wooden floors, dust particles dancing in golden beams
+  streaming through tall windows. Vibe: hazy golden intimacy, quiet
+  reverence, timeless stillness. Setting: afternoon indoor. Sounds like: A
+  cello note sustained underwater with dust particles as tremolo. Quietly
+  building, contemplative and yearning mood with a warm and earthy, vivid
+  tonal palette, ethereal pads, sustained strings, soft shimmer textures,
+  and flowing, melodic phrases with layered complexity. Instruments: cello,
+  vibraphone, analog pad, brushed snare. Timbre: dusty vinyl warmth with
+  crystalline shimmer. Harmonic feel: suspended, yearning. Dynamic shape:
+  slow breathing build. Drawing from: distant footsteps, canvas rustling,
+  wooden floor creaking, camera shutter. 72 BPM, in A minor, slow tempo,
+  medium density, 18 seconds long. Instrumental only, no vocals, no lyrics."
+
+
+================================================================================
+ STEP 8: ELEVENLABS COMPOSITION PLAN — generate_audio() part 1
+================================================================================
+
+  File: backend/services/audio_generator.py
+  Function: generate_audio(audio_id, prompt, obj)
+  API: ElevenLabs POST /v1/music/plan
+  Timeout: 60 seconds
+
+  ── REQUEST ─────────────────────────────────────────────────────────────────
+
+  POST https://api.elevenlabs.io/v1/music/plan
+  Headers: { "xi-api-key": "<ELEVENLABS_API_KEY>" }
+
+  Body:
+  {
+    "prompt": "<the compiled prompt string from Step 7>",
+    "music_length_ms": 18000,
+    "prompt_influence": 0.85,
+    "force_instrumental": true
+  }
+
+  ── RESPONSE ────────────────────────────────────────────────────────────────
+
+  A composition_plan JSON object (ElevenLabs internal structure describing
+  the planned musical arrangement — instruments, sections, transitions, etc.)
+  This is an opaque object passed directly to the next step.
+
+
+================================================================================
+ STEP 9: ELEVENLABS AUDIO GENERATION — generate_audio() part 2
+================================================================================
+
+  API: ElevenLabs POST /v1/music
+  Timeout: 120 seconds
+
+  ── REQUEST ─────────────────────────────────────────────────────────────────
+
+  POST https://api.elevenlabs.io/v1/music
+  Headers: { "xi-api-key": "<ELEVENLABS_API_KEY>" }
+
+  Body:
+  {
+    "composition_plan": <the plan object from Step 8>,
+    "output_format": "mp3"
+  }
+
+  ── RESPONSE ────────────────────────────────────────────────────────────────
+
+  Raw MP3 binary data.
+
+  Saved to: backend/audio_files/{audio_id}.mp3
+  Served at: /api/audio/{audio_id}.mp3
+
+
+================================================================================
+ COMPLETE FLOW SUMMARY (for a POST)
+================================================================================
+
+  User Input (image + squiggle + color)
+       |
+       v
+  [Step 1] ColorInput.from_hex("#FF6B35")
+       |     Output: { hex, hue_category, saturation, lightness }
+       |
+       +---> [Step 2] analyze_image()
+       |       OpenAI Vision (gpt-5.2)
+       |       Output: ImageAnalysis JSON (scene, vibe, emotion, sounds...)
+       |
+       +---> [Step 3] extract_features()
+       |       Pure math
+       |       Output: SquiggleFeatures JSON (length, area, speed, variance)
+       |
+       v
+  [Step 4] generate_enhancement_prompt()          <-- POSTS ONLY
+       |     OpenAI (gpt-5.2)
+       |     Input: ImageAnalysis + ColorInput + SquiggleFeatures
+       |     Output: ImageEnhancementPrompt JSON
+       |
+       v
+  [Step 5] morph_image()                          <-- POSTS ONLY
+       |     Pillow color overlay + OpenAI Images Edit (gpt-image-1)
+       |     Input: image bytes + color + enhancement_prompt.morphing_prompt
+       |     Output: morphed image bytes (stored as post image)
+       |
+       v
+  [Step 6] generate_audio_object()
+       |     OpenAI (gpt-5.2)
+       |     Input: ImageAnalysis + ColorInput + SquiggleFeatures (+parent?)
+       |     Output: AudioStructuredObject JSON (mood, bpm, key, instruments...)
+       |
+       v
+  [Step 7] compile_prompt()
+       |     Pure logic (no AI)
+       |     Input: AudioStructuredObject + ColorInput + ImageAnalysis + SquiggleFeatures
+       |     Output: Natural language prompt string for ElevenLabs
+       |
+       v
+  [Step 8] ElevenLabs /v1/music/plan
+       |     Input: compiled prompt + duration + prompt_influence
+       |     Output: composition_plan JSON
+       |
+       v
+  [Step 9] ElevenLabs /v1/music
+       |     Input: composition_plan
+       |     Output: MP3 audio file
+       |
+       v
+  Saved to backend/audio_files/{id}.mp3
+  All intermediate JSONs saved to SQLite
+
+
+================================================================================
+ CONFIG VALUES (backend/config.py + .env)
+================================================================================
+
+  openai_model:           gpt-5.2
+  openai_image_model:     gpt-image-1
+  elevenlabs_music_model: music_v1
+  prompt_influence:       0.85  (85% prompt adherence, 15% creative freedom)
+  max_image_size_mb:      10
+  Temperature (all GPT):  0.4
+
+================================================================================
+ APPENDIX A: IMAGE GENERATION (gpt-image-1) — DETAILED PROMPT CONSTRUCTION
+================================================================================
+
+  This section zooms in on exactly what gets sent to OpenAI's image edit API
+  when morphing a post's image (Steps 4-5 combined into one view).
+
+  ── STAGE A: BUILDING THE MORPHING PROMPT (GPT-5.2) ────────────────────────
+
+  The system first asks GPT to create a creative transformation directive.
+
+  System prompt: (see Step 4 above — ENHANCEMENT_SYSTEM_PROMPT)
+
+  User message sent to GPT:
+  {
+    "image_analysis": {
+      "scene_description": "A sunlit gallery with white walls...",
+      "detected_objects": ["paintings", "wooden frames", ...],
+      "vibe": "hazy golden intimacy, quiet reverence...",
+      "emotion": "bittersweet longing, peaceful contemplation",
+      "dominant_colors": ["warm honey gold", "deep umber shadow", ...],
+      "environment": "indoor",
+      "time_of_day": "afternoon",
+      "location_hint": "art gallery or museum",
+      "ambient_sound_associations": ["distant footsteps...", ...],
+      "sonic_metaphor": "A cello note sustained underwater..."
+    },
+    "color": {
+      "hex": "#FF6B35",
+      "hue_category": "warm_orange",
+      "saturation": 0.797,
+      "lightness": 0.604
+    },
+    "squiggle_features": {
+      "total_length": 2.345670,
+      "bounding_box_area": 0.156234,
+      "average_speed": 0.003421,
+      "speed_variance": 0.000018,
+      "point_count": 87
+    }
+  }
+
+  GPT returns the ImageEnhancementPrompt:
+  {
+    "emotional_intent": "Deepen the contemplative atmosphere into a dreamlike
+      meditation on memory and light",
+    "visual_directive": "Shift toward warm amber and deep shadow tones with
+      soft vignetting and ethereal light diffusion",
+    "morphing_prompt": "Transform this gallery scene to feel more dreamlike
+      and ethereal. Increase the atmospheric haze, deepen the shadows into
+      warm amber tones, and add soft diffuse light as if seen through an old
+      photograph. Enhance the golden hour warmth while maintaining the quiet,
+      reverent mood.",
+    "style_reference": "Wong Kar-wai cinematography with expired Polaroid
+      film aesthetic"
+  }
+
+  ── STAGE B: COLOR OVERLAY (Pillow, local) ──────────────────────────────────
+
+  Before sending to the image API, a semi-transparent color overlay is
+  composited onto the original image:
+
+    Color:   user's hex (#FF6B35 -> RGB 255, 107, 53)
+    Opacity: int(255 * (0.10 + 0.20 * saturation))
+           = int(255 * (0.10 + 0.20 * 0.797))
+           = int(255 * 0.2594)
+           = 66  (out of 255, ~26% opacity)
+
+  This tints the image toward the user's chosen color before the AI edits it.
+
+  ── STAGE C: SENDING TO gpt-image-1 (OpenAI Images Edit API) ───────────────
+
+  API Call:
+    Endpoint:        client.images.edit()
+    Model:           gpt-image-1
+    image:           <the color-overlaid PNG from Stage B>
+    prompt:          <ONLY the morphing_prompt field from Stage A>
+    response_format: b64_json
+
+  Exact prompt sent to gpt-image-1:
+
+    "Transform this gallery scene to feel more dreamlike and ethereal.
+     Increase the atmospheric haze, deepen the shadows into warm amber
+     tones, and add soft diffuse light as if seen through an old photograph.
+     Enhance the golden hour warmth while maintaining the quiet, reverent
+     mood."
+
+  NOTE: Only the morphing_prompt is sent to the image API. The other fields
+  (emotional_intent, visual_directive, style_reference) are stored in the DB
+  for reference but NOT sent to gpt-image-1.
+
+  Response: base64-encoded image data, decoded to bytes and stored as the
+  post's image BLOB in SQLite.
+
+
+================================================================================
+ ERROR HANDLING
+================================================================================
+
+  - All OpenAI calls: 2 attempts, then raise
+  - ElevenLabs calls: single attempt, raise on non-200
+  - Image morph failure: raises (fallback not automatic)
+
+================================================================================

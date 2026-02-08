@@ -24,6 +24,7 @@ let commentPostId = null;  // non-null when creating a comment
  * @param {function|null} onDone - callback after publish
  */
 export function openCreateOverlay(parentPostId = null, onDone = null) {
+  audioPlayer.clearPlayers();
   commentPostId = parentPostId;
 
   overlay = document.createElement('div');
@@ -36,9 +37,11 @@ export function openCreateOverlay(parentPostId = null, onDone = null) {
         <div class="create-spacer"></div>
       </div>
       <div class="create-canvas-area">
-        <canvas class="create-image-canvas"></canvas>
-        <div class="create-color-overlay"></div>
-        <canvas class="create-squiggle-canvas"></canvas>
+        <div class="create-canvas-wrapper">
+          <canvas class="create-image-canvas"></canvas>
+          <div class="create-color-overlay"></div>
+          <canvas class="create-squiggle-canvas"></canvas>
+        </div>
         <div class="create-upload-prompt">
           <button class="create-pick-btn">Choose Image</button>
           <button class="create-camera-btn">Camera</button>
@@ -53,8 +56,7 @@ export function openCreateOverlay(parentPostId = null, onDone = null) {
       <div class="create-result" style="display:none">
         <div class="create-result-audio"></div>
         <div class="create-result-actions">
-          <button class="create-publish-btn primary">Publish \u2192</button>
-          <button class="create-discard-btn">Discard</button>
+          <button class="create-publish-btn primary" title="Publish">\u2192</button>
         </div>
       </div>
       <div class="create-loading" style="display:none">Generating...</div>
@@ -77,7 +79,6 @@ function setupOverlayEvents(onDone) {
   const closeBtn = overlay.querySelector('.create-close-btn');
   const generateBtn = overlay.querySelector('.create-generate-btn');
   const publishBtn = overlay.querySelector('.create-publish-btn');
-  const discardBtn = overlay.querySelector('.create-discard-btn');
   const uploadPrompt = overlay.querySelector('.create-upload-prompt');
   const bottomBar = overlay.querySelector('.create-bottom-bar');
   const colorPreview = overlay.querySelector('.create-color-preview');
@@ -131,8 +132,17 @@ function setupOverlayEvents(onDone) {
       }
 
       const item = commentPostId ? data.comment : data.post;
-      console.log('[Generation]', item.id, 'structured_object:', JSON.stringify(item.structured_object, null, 2));
-      console.log('[Generation]', item.id, 'compiled_prompt:', item.compiled_prompt);
+      console.groupCollapsed(`[Generation] ${item.id}`);
+      console.log('image_analysis:', item.image_analysis);
+      console.log('squiggle_features:', item.squiggle_features);
+      console.log('structured_object:', item.structured_object);
+      console.log('compiled_prompt:', item.compiled_prompt);
+      if (item.morph_status) console.log('morph_status:', item.morph_status);
+      console.groupEnd();
+
+      if (item.morph_status && item.morph_status.startsWith('failed:')) {
+        toast('Image morph failed — using original image', true);
+      }
 
       overlay.querySelector('.create-loading').style.display = 'none';
       const resultDiv = overlay.querySelector('.create-result');
@@ -164,20 +174,6 @@ function setupOverlayEvents(onDone) {
     } else {
       navigate('/feed');
     }
-  });
-
-  // Discard
-  discardBtn.addEventListener('click', async () => {
-    if (postId) {
-      try {
-        if (commentPostId) {
-          await api.deleteComment(commentPostId, postId);
-        } else {
-          await api.deletePost(postId);
-        }
-      } catch (e) { /* ignore */ }
-    }
-    closeOverlay();
   });
 
   // Close
@@ -267,6 +263,7 @@ function getPoint(e) {
 }
 
 function closeOverlay() {
+  audioPlayer.clearPlayers();
   if (overlay) {
     overlay.remove();
     overlay = null;

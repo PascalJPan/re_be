@@ -1,0 +1,183 @@
+================================================================================
+  PIPELINE TRACE — POST
+  ID: c64b9bf7ee79  |  User: pascal  |  2026-02-08T07:05:54.899954
+================================================================================
+
+================================================================================
+ STEP 1: COLOR DERIVATION
+================================================================================
+
+Input hex: #00ffb3
+
+{
+  "hex": "#00ffb3",
+  "hue_category": "cool_cyan",
+  "saturation": 1.0,
+  "lightness": 0.5
+}
+
+================================================================================
+ STEP 2: IMAGE ANALYSIS (OpenAI Vision → gpt-5.2)
+================================================================================
+
+Input: user-uploaded image (binary)
+
+Output (ImageAnalysis):
+{
+  "scene_description": "A sharply lit stage moment freezes a speaker mid-explanation, hands hovering as if shaping an idea in the air. Cool, even spotlights carve crisp edges against a deep blue backdrop, giving the scene a clean, conference-hall depth with a faint hush beyond the frame. The fabric of a muted green sweater reads as soft and matte, absorbing light while the lavalier mic adds a small, glossy point of technical precision.",
+  "detected_objects": [
+    "person speaking",
+    "green knit sweater",
+    "lavalier microphone and cable",
+    "stage backdrop (blue gradient)",
+    "white chair",
+    "paper or notebook in foreground",
+    "stage lighting"
+  ],
+  "vibe": "cool-lit, matte-textured focus; restrained, auditorium-clean clarity; taut, professional stillness; softly pressurized attention",
+  "emotion": "measured intensity with cautious conviction",
+  "dominant_colors": [
+    "deep navy-to-cobalt blue backdrop",
+    "muted forest green knit",
+    "warm beige skin tones",
+    "charcoal hair and shadows",
+    "soft white chair highlights"
+  ],
+  "environment": "indoor",
+  "time_of_day": "null",
+  "location_hint": "conference stage or panel discussion setting",
+  "ambient_sound_associations": [
+    "lavalier mic hiss and faint RF noise",
+    "soft room tone of a large auditorium",
+    "distant cough from the audience",
+    "paper rustling and a pen tapping in the front row",
+    "subtle chair creak as someone shifts",
+    "muted PA speaker hum",
+    "a brief, polite chuckle fading quickly"
+  ],
+  "sonic_metaphor": "A clipped, articulate voice riding a thin bed of auditorium air\u2014like a metronome ticking inside a velvet-lined room."
+}
+
+================================================================================
+ STEP 3: SQUIGGLE FEATURE EXTRACTION
+================================================================================
+
+Output (SquiggleFeatures):
+{
+  "total_length": 1.329732,
+  "bounding_box_area": 0.30496,
+  "average_speed": 0.001449,
+  "speed_variance": 3e-06,
+  "point_count": 57
+}
+
+================================================================================
+ STEP 4: IMAGE ENHANCEMENT PROMPT (OpenAI → gpt-5.2)
+================================================================================
+
+Input: ImageAnalysis + ColorInput + SquiggleFeatures
+
+Output (ImageEnhancementPrompt):
+{
+  "emotional_intent": "Amplify the measured intensity into a crisp, electric conviction\u2014calm on the surface, charged underneath.",
+  "visual_directive": "Grade the scene toward cool cyan-teal with deeper navy shadows, heightened micro-contrast, and a subtle atmospheric haze that makes the spotlight feel more pressurized.",
+  "morphing_prompt": "Preserve the speaker, pose, and stage composition, but infuse the lighting with a cool-cyan (#00ffb3) edge that kisses the contours of the face, hands, and sweater knit, like a controlled electrical aura. Deepen the blue backdrop into a richer cobalt-to-navy gradient with gentle falloff and a faint, clean haze in the beam paths, while keeping the overall look professional and sharp. Add fine film grain and slightly boosted clarity in the fabric texture and mic highlights, balancing crisp edges with a restrained, modern glow.",
+  "style_reference": "Denis Villeneuve cool neo-noir minimalism (clean teal grading, controlled haze)"
+}
+
+================================================================================
+ STEP 5: IMAGE MORPHING (OpenAI → gpt-image-1)
+================================================================================
+
+Input image: original + color overlay (Pillow)
+Prompt sent to gpt-image-1:
+
+  "Preserve the speaker, pose, and stage composition, but infuse the lighting with a cool-cyan (#00ffb3) edge that kisses the contours of the face, hands, and sweater knit, like a controlled electrical aura. Deepen the blue backdrop into a richer cobalt-to-navy gradient with gentle falloff and a faint, clean haze in the beam paths, while keeping the overall look professional and sharp. Add fine film grain and slightly boosted clarity in the fabric texture and mic highlights, balancing crisp edges with a restrained, modern glow."
+
+Output: morphed image bytes (stored as post image) — SUCCESS
+
+================================================================================
+ STEP 6: AUDIO STRUCTURED OBJECT (OpenAI → gpt-5.2)
+================================================================================
+
+Input: ImageAnalysis + ColorInput + SquiggleFeatures
+
+Output (AudioStructuredObject):
+{
+  "audio_type": "music",
+  "mood": {
+    "primary": "focused",
+    "secondary": "coolly confident"
+  },
+  "energy": 0.62,
+  "tempo": "medium",
+  "density": "dense",
+  "texture": [
+    "tight",
+    "clean",
+    "metronomic",
+    "glassy",
+    "controlled pulses",
+    "subtle room-air bed"
+  ],
+  "sound_references": [
+    "conference hall room tone",
+    "lavalier mic hiss / faint RF noise",
+    "muted PA hum",
+    "distant audience cough",
+    "paper rustle and pen tapping",
+    "brief polite chuckle tail"
+  ],
+  "duration_seconds": 18,
+  "bpm": 112,
+  "musical_key": "E minor",
+  "relation_to_parent": "original",
+  "confidence": 0.78,
+  "instruments": [
+    "digital FM mallet synth",
+    "tight analog synth bass",
+    "clicky rimshot / finger-snap percussion",
+    "airy noise pad"
+  ],
+  "genre_hint": "minimal synthwave",
+  "harmonic_mood": "suspended and analytical",
+  "dynamic_shape": "steady pulse with a subtle mid-clip lift, then a clean cutoff",
+  "sonic_palette": "crystalline cyan sheen with matte low-end, very clean and lightly compressed"
+}
+
+================================================================================
+ STEP 7: COMPILED PROMPT (deterministic logic)
+================================================================================
+
+Input: AudioStructuredObject + ColorInput + ImageAnalysis + SquiggleFeatures
+
+Output (prompt string sent to ElevenLabs):
+
+  "Instrumental music track. Genre: minimal synthwave. Scene: A sharply lit stage moment freezes a speaker mid-explanation, hands hovering as if shaping an idea in the air. Cool, even spotlights carve crisp edges against a deep blue backdrop, giving the scene a clean, conference-hall depth with a faint hush beyond the frame. The fabric of a muted green sweater reads as soft and matte, absorbing light while the lavalier mic adds a small, glossy point of technical precision.. Vibe: cool-lit, matte-textured focus; restrained, auditorium-clean clarity; taut, professional stillness; softly pressurized attention. Setting: null indoor. Sounds like: A clipped, articulate voice riding a thin bed of auditorium air—like a metronome ticking inside a velvet-lined room.. Warmly pulsing, focused and coolly confident mood with a crisp and spacious, vivid tonal palette, Instruments: digital FM mallet synth, tight analog synth bass, clicky rimshot / finger-snap percussion, airy noise pad. Timbre: crystalline cyan sheen with matte low-end, very clean and lightly compressed. Harmonic feel: suspended and analytical. Dynamic shape: steady pulse with a subtle mid-clip lift, then a clean cutoff. Drawing from: conference hall room tone, lavalier mic hiss / faint RF noise, muted PA hum, distant audience cough, paper rustle and pen tapping, brief polite chuckle tail. 112 BPM, in E minor, medium tempo, dense density, 18 seconds long. Instrumental only, no vocals, no lyrics."
+
+================================================================================
+ STEP 8: ELEVENLABS COMPOSITION PLAN (/v1/music/plan)
+================================================================================
+
+Request payload:
+{
+  "prompt": "Instrumental music track. Genre: minimal synthwave. Scene: A sharply lit stage moment freezes a speaker mid-explanation, hands hovering as if shaping an idea in the air. Cool, even spotlights carve crisp edges against a deep blue backdrop, giving the scene a clean, conference-hall depth with a faint hush beyond the frame. The fabric of a muted green sweater reads as soft and matte, absorbing light while the lavalier mic adds a small, glossy point of technical precision.. Vibe: cool-lit, matte-textured focus; restrained, auditorium-clean clarity; taut, professional stillness; softly pressurized attention. Setting: null indoor. Sounds like: A clipped, articulate voice riding a thin bed of auditorium air\u2014like a metronome ticking inside a velvet-lined room.. Warmly pulsing, focused and coolly confident mood with a crisp and spacious, vivid tonal palette, Instruments: digital FM mallet synth, tight analog synth bass, clicky rimshot / finger-snap percussion, airy noise pad. Timbre: crystalline cyan sheen with matte low-end, very clean and lightly compressed. Harmonic feel: suspended and analytical. Dynamic shape: steady pulse with a subtle mid-clip lift, then a clean cutoff. Drawing from: conference hall room tone, lavalier mic hiss / faint RF noise, muted PA hum, distant audience cough, paper rustle and pen tapping, brief polite chuckle tail. 112 BPM, in E minor, medium tempo, dense density, 18 seconds long. Instrumental only, no vocals, no lyrics.",
+  "music_length_ms": 18000,
+  "prompt_influence": 0.85,
+  "force_instrumental": true
+}
+
+Response: composition_plan JSON (opaque, passed to next step)
+
+================================================================================
+ STEP 9: ELEVENLABS AUDIO GENERATION (/v1/music)
+================================================================================
+
+Request: { composition_plan: <from previous step>, output_format: "mp3" }
+
+Output: c64b9bf7ee79.mp3
+Saved to: backend/audio_files/c64b9bf7ee79.mp3
+
+================================================================================
+  TRACE COMPLETE — c64b9bf7ee79.mp3
+================================================================================

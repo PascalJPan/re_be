@@ -1,0 +1,190 @@
+================================================================================
+  PIPELINE TRACE — POST
+  ID: 405ec4b0e977  |  User: pascal  |  2026-02-08T06:40:53.395529
+================================================================================
+
+================================================================================
+ STEP 1: COLOR DERIVATION
+================================================================================
+
+Input hex: #6f56a9
+
+{
+  "hex": "#6f56a9",
+  "hue_category": "cool_blue",
+  "saturation": 0.325,
+  "lightness": 0.5
+}
+
+================================================================================
+ STEP 2: IMAGE ANALYSIS (OpenAI Vision → gpt-5.2)
+================================================================================
+
+Input: user-uploaded image (binary)
+
+Output (ImageAnalysis):
+{
+  "scene_description": "A cluttered tabletop sits under flat, cool indoor light, its surfaces catching small metallic glints from a tall energy-drink can and the sheen of cables looping like loose vines. Beyond the table, a dark window reads as a deep, silent void with faint reflections, giving the room a shallow foreground and a sudden drop into night. The scene feels lived-in and utilitarian\u2014objects arranged by use rather than design, with soft fabric and hard plastic sharing the same cramped plane.",
+  "detected_objects": [
+    "white table",
+    "silver Monster energy drink can (metal)",
+    "clear glass bottle",
+    "orange translucent water bottle (plastic)",
+    "small drink bottle (plastic)",
+    "laptop with stickers",
+    "smartphone",
+    "charging cables",
+    "black power adapter/charger",
+    "chewing gum container (Extra, plastic)",
+    "crumpled paper/napkin",
+    "chair",
+    "person's forearm with long-sleeve shirt",
+    "window with night outside",
+    "white wall/radiator panel"
+  ],
+  "vibe": "fluorescent-stale, cable-tangled, late-night utilitarian, faintly caffeinated",
+  "emotion": "restless focus edged with quiet fatigue",
+  "dominant_colors": [
+    "cool off-white tabletop",
+    "matte charcoal black electronics",
+    "brushed silver aluminum",
+    "muted lavender-pink fabric",
+    "dim window-black",
+    "amber-orange plastic"
+  ],
+  "environment": "indoor",
+  "time_of_day": "night",
+  "location_hint": "a small office or dorm-like room with a window overlooking darkness",
+  "ambient_sound_associations": [
+    "low HVAC hum",
+    "soft buzz of overhead fluorescent lighting",
+    "plastic bottle cap clicking against the table",
+    "aluminum can lightly tapping when nudged",
+    "cable sheath rubbing as it\u2019s pulled across the surface",
+    "faint laptop fan whir",
+    "distant hallway footsteps muffled through a door",
+    "a chair fabric creak as someone shifts"
+  ],
+  "sonic_metaphor": "A thin fluorescent buzz braided with the metallic tick of a can\u2014like insomnia translated into a quiet, looping cable-hum."
+}
+
+================================================================================
+ STEP 3: SQUIGGLE FEATURE EXTRACTION
+================================================================================
+
+Output (SquiggleFeatures):
+{
+  "total_length": 0.13516,
+  "bounding_box_area": 0.0014,
+  "average_speed": 0.000342,
+  "speed_variance": 0.0,
+  "point_count": 26
+}
+
+================================================================================
+ STEP 4: IMAGE ENHANCEMENT PROMPT (OpenAI → gpt-5.2)
+================================================================================
+
+Input: ImageAnalysis + ColorInput + SquiggleFeatures
+
+Output (ImageEnhancementPrompt):
+{
+  "emotional_intent": "Intensify the restless late-night focus into a hushed, neon-tinged fatigue that feels suspended in time.",
+  "visual_directive": "Grade the scene toward cool violet-blue (#6f56a9) with deeper blacks in the window, softened fluorescent highlights, and a faint nocturnal haze.",
+  "morphing_prompt": "Keep every object and the exact composition, but shift the lighting into a midnight, cool-violet cast as if the room is lit by a dim monitor glow fighting tired fluorescent light. Deepen shadows between the cables and under objects, add subtle bloom on metallic glints (energy drink can, adapters) and a gentle vignette pulling the eye into the tabletop while the window becomes a richer, velvety black with faint reflections. Introduce fine film grain and slight texture emphasis on plastic and fabric to make the clutter feel tactile and quietly electric, like insomnia humming under the surface.",
+  "style_reference": "Neo-noir midnight grading with subtle analog film grain (Denis Villeneuve night interiors / Kodak 500T feel)"
+}
+
+================================================================================
+ STEP 5: IMAGE MORPHING (OpenAI → gpt-image-1)
+================================================================================
+
+Input image: original + color overlay (Pillow)
+Prompt sent to gpt-image-1:
+
+  "Keep every object and the exact composition, but shift the lighting into a midnight, cool-violet cast as if the room is lit by a dim monitor glow fighting tired fluorescent light. Deepen shadows between the cables and under objects, add subtle bloom on metallic glints (energy drink can, adapters) and a gentle vignette pulling the eye into the tabletop while the window becomes a richer, velvety black with faint reflections. Introduce fine film grain and slight texture emphasis on plastic and fabric to make the clutter feel tactile and quietly electric, like insomnia humming under the surface."
+
+Output: morphed image bytes (stored as post image)
+
+================================================================================
+ STEP 6: AUDIO STRUCTURED OBJECT (OpenAI → gpt-5.2)
+================================================================================
+
+Input: ImageAnalysis + ColorInput + SquiggleFeatures
+
+Output (AudioStructuredObject):
+{
+  "audio_type": "music",
+  "mood": {
+    "primary": "restless",
+    "secondary": "fatigued"
+  },
+  "energy": 0.28,
+  "tempo": "slow",
+  "density": "sparse",
+  "texture": [
+    "thin fluorescent buzz layer",
+    "soft pulsing sub",
+    "minimal click-percussion",
+    "hushed, looping pad"
+  ],
+  "sound_references": [
+    "overhead fluorescent light buzz",
+    "laptop fan whir",
+    "aluminum can tick/tap",
+    "cable rub across tabletop",
+    "distant muffled hallway footsteps"
+  ],
+  "duration_seconds": 15,
+  "bpm": 74,
+  "musical_key": "D minor",
+  "relation_to_parent": "original",
+  "confidence": 0.78,
+  "instruments": [
+    "glassy FM electric piano",
+    "soft analog synth pad",
+    "sub bass sine",
+    "tight rim-click percussion"
+  ],
+  "genre_hint": "minimal downtempo",
+  "harmonic_mood": "suspended and slightly anxious",
+  "dynamic_shape": "steady loop with a faint swell midway, then a gentle fade",
+  "sonic_palette": "cool violet-tinted digital haze with subtle metallic transients, clean and slightly sterile"
+}
+
+================================================================================
+ STEP 7: COMPILED PROMPT (deterministic logic)
+================================================================================
+
+Input: AudioStructuredObject + ColorInput + ImageAnalysis + SquiggleFeatures
+
+Output (prompt string sent to ElevenLabs):
+
+  "Instrumental music track. Genre: minimal downtempo. Scene: A cluttered tabletop sits under flat, cool indoor light, its surfaces catching small metallic glints from a tall energy-drink can and the sheen of cables looping like loose vines. Beyond the table, a dark window reads as a deep, silent void with faint reflections, giving the room a shallow foreground and a sudden drop into night. The scene feels lived-in and utilitarian—objects arranged by use rather than design, with soft fabric and hard plastic sharing the same cramped plane.. Vibe: fluorescent-stale, cable-tangled, late-night utilitarian, faintly caffeinated. Setting: night indoor. Sounds like: A thin fluorescent buzz braided with the metallic tick of a can—like insomnia translated into a quiet, looping cable-hum.. Gently simmering, restless and fatigued mood with a cool and ethereal tonal palette, thin fluorescent buzz layer, soft pulsing sub, minimal click-percussion, hushed, looping pad textures, and sustained pads and slow drones with focused simplicity. Instruments: glassy FM electric piano, soft analog synth pad, sub bass sine, tight rim-click percussion. Timbre: cool violet-tinted digital haze with subtle metallic transients, clean and slightly sterile. Harmonic feel: suspended and slightly anxious. Dynamic shape: steady loop with a faint swell midway, then a gentle fade. Drawing from: overhead fluorescent light buzz, laptop fan whir, aluminum can tick/tap, cable rub across tabletop, distant muffled hallway footsteps. 74 BPM, in D minor, slow tempo, sparse density, 15 seconds long. Instrumental only, no vocals, no lyrics."
+
+================================================================================
+ STEP 8: ELEVENLABS COMPOSITION PLAN (/v1/music/plan)
+================================================================================
+
+Request payload:
+{
+  "prompt": "Instrumental music track. Genre: minimal downtempo. Scene: A cluttered tabletop sits under flat, cool indoor light, its surfaces catching small metallic glints from a tall energy-drink can and the sheen of cables looping like loose vines. Beyond the table, a dark window reads as a deep, silent void with faint reflections, giving the room a shallow foreground and a sudden drop into night. The scene feels lived-in and utilitarian\u2014objects arranged by use rather than design, with soft fabric and hard plastic sharing the same cramped plane.. Vibe: fluorescent-stale, cable-tangled, late-night utilitarian, faintly caffeinated. Setting: night indoor. Sounds like: A thin fluorescent buzz braided with the metallic tick of a can\u2014like insomnia translated into a quiet, looping cable-hum.. Gently simmering, restless and fatigued mood with a cool and ethereal tonal palette, thin fluorescent buzz layer, soft pulsing sub, minimal click-percussion, hushed, looping pad textures, and sustained pads and slow drones with focused simplicity. Instruments: glassy FM electric piano, soft analog synth pad, sub bass sine, tight rim-click percussion. Timbre: cool violet-tinted digital haze with subtle metallic transients, clean and slightly sterile. Harmonic feel: suspended and slightly anxious. Dynamic shape: steady loop with a faint swell midway, then a gentle fade. Drawing from: overhead fluorescent light buzz, laptop fan whir, aluminum can tick/tap, cable rub across tabletop, distant muffled hallway footsteps. 74 BPM, in D minor, slow tempo, sparse density, 15 seconds long. Instrumental only, no vocals, no lyrics.",
+  "music_length_ms": 15000,
+  "prompt_influence": 0.85,
+  "force_instrumental": true
+}
+
+Response: composition_plan JSON (opaque, passed to next step)
+
+================================================================================
+ STEP 9: ELEVENLABS AUDIO GENERATION (/v1/music)
+================================================================================
+
+Request: { composition_plan: <from previous step>, output_format: "mp3" }
+
+Output: 405ec4b0e977.mp3
+Saved to: backend/audio_files/405ec4b0e977.mp3
+
+================================================================================
+  TRACE COMPLETE — 405ec4b0e977.mp3
+================================================================================

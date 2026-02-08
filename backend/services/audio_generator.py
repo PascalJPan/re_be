@@ -18,6 +18,8 @@ async def generate_audio(audio_id: str, prompt: str, obj: AudioStructuredObject)
     filename = f"{audio_id}.mp3"
     filepath = AUDIO_DIR / filename
 
+    logger.info("Compiled prompt for %s:\n%s", audio_id, prompt)
+
     headers = {
         "xi-api-key": settings.elevenlabs_api_key,
     }

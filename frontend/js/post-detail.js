@@ -81,8 +81,12 @@ async function loadPost(container, postId) {
 
     container.appendChild(cardRow);
 
-    console.log('[Post]', postId, 'structured_object:', JSON.stringify(post.structured_object, null, 2));
-    console.log('[Post]', postId, 'compiled_prompt:', post.compiled_prompt);
+    console.groupCollapsed(`[Post] ${postId}`);
+    console.log('image_analysis:', post.image_analysis);
+    console.log('squiggle_features:', post.squiggle_features);
+    console.log('structured_object:', post.structured_object);
+    console.log('compiled_prompt:', post.compiled_prompt);
+    console.groupEnd();
 
     // Comments list
     const commentsList = document.createElement('div');
@@ -148,8 +152,12 @@ function createCommentItem(comment) {
   meta.appendChild(time);
   div.appendChild(meta);
 
-  console.log('[Comment]', comment.id, 'structured_object:', JSON.stringify(comment.structured_object, null, 2));
-  console.log('[Comment]', comment.id, 'compiled_prompt:', comment.compiled_prompt);
+  console.groupCollapsed(`[Comment] ${comment.id}`);
+  console.log('image_analysis:', comment.image_analysis);
+  console.log('squiggle_features:', comment.squiggle_features);
+  console.log('structured_object:', comment.structured_object);
+  console.log('compiled_prompt:', comment.compiled_prompt);
+  console.groupEnd();
 
   return div;
 }

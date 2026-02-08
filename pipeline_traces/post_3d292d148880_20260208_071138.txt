@@ -1,0 +1,184 @@
+================================================================================
+  PIPELINE TRACE — POST
+  ID: 3d292d148880  |  User: pascal  |  2026-02-08T07:11:38.588720
+================================================================================
+
+================================================================================
+ STEP 1: COLOR DERIVATION
+================================================================================
+
+Input hex: #fe1e01
+
+{
+  "hex": "#fe1e01",
+  "hue_category": "warm_red",
+  "saturation": 0.992,
+  "lightness": 0.5
+}
+
+================================================================================
+ STEP 2: IMAGE ANALYSIS (OpenAI Vision → gpt-5.2)
+================================================================================
+
+Input: user-uploaded image (binary)
+
+Output (ImageAnalysis):
+{
+  "scene_description": "A colossal fireball blooms upward into a dense, cauliflower-like mushroom cloud, its core churning from white-hot glare to bruised, sooty blacks. The light is violent and directional, throwing a harsh orange wash across a flat, red-stained ground while the background collapses into smoky darkness. Depth reads as a towering vertical column\u2014bright at the base, thickening into turbulent, rolling layers as it rises.",
+  "detected_objects": [
+    "mushroom cloud",
+    "fireball",
+    "billowing smoke",
+    "flame plume",
+    "glowing embers",
+    "dark sky/backdrop",
+    "flat ground surface"
+  ],
+  "vibe": "searing incandescent turbulence, ash-thick suffocation, metallic heat-haze, apocalyptic pressure",
+  "emotion": "awe-struck dread mixed with stunned disbelief",
+  "dominant_colors": [
+    "white-hot yellow core",
+    "molten orange flame",
+    "deep ember red",
+    "charcoal black smoke",
+    "soot-brown shadows"
+  ],
+  "environment": "outdoor",
+  "time_of_day": "night",
+  "location_hint": "an open, barren expanse under a darkened sky",
+  "ambient_sound_associations": [
+    "a delayed, concussive shockwave thump that hits the chest",
+    "roaring, jet-engine-like flame rush",
+    "low-frequency rumble like distant thunder rolling continuously",
+    "crackling, snapping combustion at the base",
+    "gravelly hiss of superheated air and dust being scoured along the ground",
+    "whipping wind as pressure fronts tear past",
+    "falling grit and ash pattering like dry rain"
+  ],
+  "sonic_metaphor": "A cathedral organ chord detonating into a furnace-roar, then sinking into a sub-bass rumble that makes the air feel heavy."
+}
+
+================================================================================
+ STEP 3: SQUIGGLE FEATURE EXTRACTION
+================================================================================
+
+Output (SquiggleFeatures):
+{
+  "total_length": 2.690394,
+  "bounding_box_area": 0.600196,
+  "average_speed": 0.001781,
+  "speed_variance": 5e-06,
+  "point_count": 92
+}
+
+================================================================================
+ STEP 4: IMAGE ENHANCEMENT PROMPT (OpenAI → gpt-5.2)
+================================================================================
+
+Input: ImageAnalysis + ColorInput + SquiggleFeatures
+
+Output (ImageEnhancementPrompt):
+{
+  "emotional_intent": "Intensify the awe-struck dread into a claustrophobic, heart-stopping inferno where the air itself feels weaponized.",
+  "visual_directive": "Grade aggressively toward high-saturation warm red (#fe1e01) with scorching highlights, crushed smoky blacks, and a dense heat-haze veil that tightens the atmosphere.",
+  "morphing_prompt": "Preserve the exact mushroom cloud and composition, but push the scene into a more oppressive, apocalyptic pressure-cooker: deepen the soot and charcoal smoke into near-black, while letting the core bloom into searing white-yellow with molten red edges. Add pronounced heat distortion rippling upward from the base, subtle ember speckle and ash grit in the air, and a faint shockwave-like luminance ring in the haze (no new objects, just atmospheric light behavior). Increase micro-contrast and gritty film grain in the smoke layers, with a tight vignette and red-stained ground glow that feels blistering and irradiated.",
+  "style_reference": "Neon-noir apocalypse grading with Francis Bacon-like violent reds and high-contrast chiaroscuro"
+}
+
+================================================================================
+ STEP 5: IMAGE MORPHING (OpenAI → gpt-image-1)
+================================================================================
+
+Input image: original + color overlay (Pillow)
+Prompt sent to gpt-image-1:
+
+  "Preserve the exact mushroom cloud and composition, but push the scene into a more oppressive, apocalyptic pressure-cooker: deepen the soot and charcoal smoke into near-black, while letting the core bloom into searing white-yellow with molten red edges. Add pronounced heat distortion rippling upward from the base, subtle ember speckle and ash grit in the air, and a faint shockwave-like luminance ring in the haze (no new objects, just atmospheric light behavior). Increase micro-contrast and gritty film grain in the smoke layers, with a tight vignette and red-stained ground glow that feels blistering and irradiated."
+
+Output: morphed image bytes (stored as post image) — SUCCESS
+
+================================================================================
+ STEP 6: AUDIO STRUCTURED OBJECT (OpenAI → gpt-5.2)
+================================================================================
+
+Input: ImageAnalysis + ColorInput + SquiggleFeatures
+
+Output (AudioStructuredObject):
+{
+  "audio_type": "music",
+  "mood": {
+    "primary": "apocalyptic",
+    "secondary": "awe-struck dread"
+  },
+  "energy": 0.78,
+  "tempo": "medium",
+  "density": "dense",
+  "texture": [
+    "sub-bass pressure wave",
+    "distorted low brass/organ mass",
+    "granular ash-noise swells",
+    "metallic heat-haze shimmer",
+    "tremolo drones",
+    "impact hits with long decay"
+  ],
+  "sound_references": [
+    "delayed concussive shockwave thump",
+    "jet-engine-like flame roar",
+    "continuous distant-thunder rumble",
+    "crackling combustion at the base",
+    "gravelly superheated air hiss",
+    "whipping pressure-front wind",
+    "dry ash patter"
+  ],
+  "duration_seconds": 20,
+  "bpm": 112,
+  "musical_key": "F# minor",
+  "relation_to_parent": "original",
+  "confidence": 0.86,
+  "instruments": [
+    "cathedral pipe organ",
+    "analog monosynth (sub-bass)",
+    "taiko drum ensemble",
+    "distorted electric guitar drones"
+  ],
+  "genre_hint": "industrial cinematic",
+  "harmonic_mood": "catastrophic, suspended, crushing",
+  "dynamic_shape": "instant detonation hit, rapid swell into a towering wall of sound, then a heavy sinking rumble with ash-noise tail",
+  "sonic_palette": "heat-scorched, saturated red-orange distortion with seismic low end and smoky, granular noise"
+}
+
+================================================================================
+ STEP 7: COMPILED PROMPT (deterministic logic)
+================================================================================
+
+Input: AudioStructuredObject + ColorInput + ImageAnalysis + SquiggleFeatures
+
+Output (prompt string sent to ElevenLabs):
+
+  "Instrumental music track. Genre: industrial cinematic. Scene: A colossal fireball blooms upward into a dense, cauliflower-like mushroom cloud, its core churning from white-hot glare to bruised, sooty blacks. The light is violent and directional, throwing a harsh orange wash across a flat, red-stained ground while the background collapses into smoky darkness. Depth reads as a towering vertical column—bright at the base, thickening into turbulent, rolling layers as it rises.. Vibe: searing incandescent turbulence, ash-thick suffocation, metallic heat-haze, apocalyptic pressure. Setting: night outdoor. Sounds like: A cathedral organ chord detonating into a furnace-roar, then sinking into a sub-bass rumble that makes the air feel heavy.. Intensely surging, apocalyptic and awe-struck dread mood with a warm and bold, vivid tonal palette, Instruments: cathedral pipe organ, analog monosynth (sub-bass), taiko drum ensemble, distorted electric guitar drones. Timbre: heat-scorched, saturated red-orange distortion with seismic low end and smoky, granular noise. Harmonic feel: catastrophic, suspended, crushing. Dynamic shape: instant detonation hit, rapid swell into a towering wall of sound, then a heavy sinking rumble with ash-noise tail. Drawing from: delayed concussive shockwave thump, jet-engine-like flame roar, continuous distant-thunder rumble, crackling combustion at the base, gravelly superheated air hiss, whipping pressure-front wind. 112 BPM, in F# minor, medium tempo, dense density, 20 seconds long. Instrumental only, no vocals, no lyrics."
+
+================================================================================
+ STEP 8: ELEVENLABS COMPOSITION PLAN (/v1/music/plan)
+================================================================================
+
+Request payload:
+{
+  "prompt": "Instrumental music track. Genre: industrial cinematic. Scene: A colossal fireball blooms upward into a dense, cauliflower-like mushroom cloud, its core churning from white-hot glare to bruised, sooty blacks. The light is violent and directional, throwing a harsh orange wash across a flat, red-stained ground while the background collapses into smoky darkness. Depth reads as a towering vertical column\u2014bright at the base, thickening into turbulent, rolling layers as it rises.. Vibe: searing incandescent turbulence, ash-thick suffocation, metallic heat-haze, apocalyptic pressure. Setting: night outdoor. Sounds like: A cathedral organ chord detonating into a furnace-roar, then sinking into a sub-bass rumble that makes the air feel heavy.. Intensely surging, apocalyptic and awe-struck dread mood with a warm and bold, vivid tonal palette, Instruments: cathedral pipe organ, analog monosynth (sub-bass), taiko drum ensemble, distorted electric guitar drones. Timbre: heat-scorched, saturated red-orange distortion with seismic low end and smoky, granular noise. Harmonic feel: catastrophic, suspended, crushing. Dynamic shape: instant detonation hit, rapid swell into a towering wall of sound, then a heavy sinking rumble with ash-noise tail. Drawing from: delayed concussive shockwave thump, jet-engine-like flame roar, continuous distant-thunder rumble, crackling combustion at the base, gravelly superheated air hiss, whipping pressure-front wind. 112 BPM, in F# minor, medium tempo, dense density, 20 seconds long. Instrumental only, no vocals, no lyrics.",
+  "music_length_ms": 20000,
+  "prompt_influence": 0.85,
+  "force_instrumental": true
+}
+
+Response: composition_plan JSON (opaque, passed to next step)
+
+================================================================================
+ STEP 9: ELEVENLABS AUDIO GENERATION (/v1/music)
+================================================================================
+
+Request: { composition_plan: <from previous step>, output_format: "mp3" }
+
+Output: 3d292d148880.mp3
+Saved to: backend/audio_files/3d292d148880.mp3
+
+================================================================================
+  TRACE COMPLETE — 3d292d148880.mp3
+================================================================================

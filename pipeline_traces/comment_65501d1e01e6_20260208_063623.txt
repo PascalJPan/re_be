@@ -1,0 +1,203 @@
+================================================================================
+  PIPELINE TRACE — COMMENT
+  ID: 65501d1e01e6  |  User: pascal  |  2026-02-08T06:36:23.701666
+================================================================================
+
+================================================================================
+ STEP 1: COLOR DERIVATION
+================================================================================
+
+Input hex: #17ef10
+
+{
+  "hex": "#17ef10",
+  "hue_category": "cool_green",
+  "saturation": 0.875,
+  "lightness": 0.5
+}
+
+================================================================================
+ STEP 2: IMAGE ANALYSIS (OpenAI Vision → gpt-5.2)
+================================================================================
+
+Input: user-uploaded image (binary)
+
+Output (ImageAnalysis):
+{
+  "scene_description": "A fluorescent-lit office corner stretches back in cool, flat light, with a grid ceiling and long vent lines pulling the eye into depth. In the foreground, a person leans into the frame with wide eyes and a startled expression, while a cluttered table and blank whiteboard sit softly out of focus behind. The air feels dry and quiet, like a room paused between meetings.",
+  "detected_objects": [
+    "person (foreground face)",
+    "sweater",
+    "drop ceiling tiles",
+    "fluorescent ceiling lights",
+    "air vent",
+    "whiteboard",
+    "table/desk surface",
+    "paper cups",
+    "bottles/containers",
+    "door",
+    "office walls"
+  ],
+  "vibe": "fluorescent-dry stillness, beige institutional hush, slightly grainy webcam immediacy, cool sterile spaciousness",
+  "emotion": "comic surprise tinged with self-conscious awkwardness",
+  "dominant_colors": [
+    "cool office white",
+    "pale gray ceiling",
+    "muted beige walls",
+    "olive-brown fabric tones",
+    "soft black accents"
+  ],
+  "environment": "indoor",
+  "time_of_day": "null",
+  "location_hint": "a small office or classroom-like meeting room with a whiteboard",
+  "ambient_sound_associations": [
+    "fluorescent light ballast buzz",
+    "HVAC vent whoosh with occasional rattle",
+    "distant hallway footsteps muffled by carpet",
+    "a chair\u2019s plastic feet scraping lightly on tile",
+    "paper cup tapping against a tabletop",
+    "soft computer fan whir from somewhere off-camera",
+    "a door latch clicking faintly in the background"
+  ],
+  "sonic_metaphor": "A sudden clarinet squeak cutting through a long, low air-conditioner drone in a room that\u2019s trying very hard to stay quiet."
+}
+
+================================================================================
+ STEP 3: SQUIGGLE FEATURE EXTRACTION
+================================================================================
+
+Output (SquiggleFeatures):
+{
+  "total_length": 1.820214,
+  "bounding_box_area": 0.363203,
+  "average_speed": 0.000924,
+  "speed_variance": 1e-06,
+  "point_count": 119
+}
+
+================================================================================
+ PARENT POST AUDIO OBJECT (inherited bpm/key/duration)
+================================================================================
+
+{
+  "audio_type": "music",
+  "mood": {
+    "primary": "weary",
+    "secondary": "mischievous"
+  },
+  "energy": 0.32,
+  "tempo": "slow",
+  "density": "sparse",
+  "texture": [
+    "tape-warp wobble",
+    "fluorescent-hum drone bed",
+    "soft lo-fi grit",
+    "dry room reverb tails"
+  ],
+  "sound_references": [
+    "fluorescent light ballast buzz",
+    "HVAC vent whisper with occasional rattle",
+    "ceramic mug clink on laminate",
+    "distant chair scrape on linoleum",
+    "faint notification ping"
+  ],
+  "duration_seconds": 15,
+  "bpm": 78,
+  "musical_key": "A minor",
+  "relation_to_parent": "original",
+  "confidence": 0.78,
+  "instruments": [
+    "Rhodes piano",
+    "analog synth pad",
+    "sub bass",
+    "rim-click drum machine"
+  ],
+  "genre_hint": "lo-fi downtempo",
+  "harmonic_mood": "suspended and slightly bittersweet",
+  "dynamic_shape": "gentle fade-in on neon hum, a small rhythmic pulse enters halfway, then dissolves back into hiss",
+  "sonic_palette": "cassette-warmed, grainy and cool with a muted warm-red tint; slightly warped at the edges"
+}
+
+================================================================================
+ STEP 4: AUDIO STRUCTURED OBJECT (OpenAI → gpt-5.2)
+================================================================================
+
+Input: ImageAnalysis + ColorInput + SquiggleFeatures + parent AudioStructuredObject
+
+Output (AudioStructuredObject):
+{
+  "audio_type": "music",
+  "mood": {
+    "primary": "awkward",
+    "secondary": "playful"
+  },
+  "energy": 0.38,
+  "tempo": "slow",
+  "density": "dense",
+  "texture": [
+    "fluorescent-hum drone bed",
+    "tight gated micro-percussion",
+    "glitchy stutter edits",
+    "dry close-mic transients",
+    "subtle lo-fi grit"
+  ],
+  "sound_references": [
+    "fluorescent light ballast buzz",
+    "HVAC vent whoosh with occasional rattle",
+    "paper cup tap on tabletop",
+    "muffled hallway footsteps on carpet",
+    "faint door latch click"
+  ],
+  "duration_seconds": 15,
+  "bpm": 78,
+  "musical_key": "A minor",
+  "relation_to_parent": "variation",
+  "confidence": 0.74,
+  "instruments": [
+    "Rhodes piano",
+    "bass clarinet (squeak accents)",
+    "analog synth pad",
+    "rim-click drum machine"
+  ],
+  "genre_hint": "lo-fi downtempo",
+  "harmonic_mood": "suspended with a comic, slightly tense edge",
+  "dynamic_shape": "steady neon drone, then a brief clarinet squeak motif and busier rim-click grid bloom in the middle, settling back to the hum",
+  "sonic_palette": "cool sterile-green sheen over cassette-warm grain; dry and close with occasional glitch flicker"
+}
+
+================================================================================
+ STEP 5: COMPILED PROMPT (deterministic logic)
+================================================================================
+
+Input: AudioStructuredObject + ColorInput + ImageAnalysis + SquiggleFeatures
+
+Output (prompt string sent to ElevenLabs):
+
+  "Instrumental music track. Genre: lo-fi downtempo. Scene: A fluorescent-lit office corner stretches back in cool, flat light, with a grid ceiling and long vent lines pulling the eye into depth. In the foreground, a person leans into the frame with wide eyes and a startled expression, while a cluttered table and blank whiteboard sit softly out of focus behind. The air feels dry and quiet, like a room paused between meetings.. Vibe: fluorescent-dry stillness, beige institutional hush, slightly grainy webcam immediacy, cool sterile spaciousness. Setting: null indoor. Sounds like: A sudden clarinet squeak cutting through a long, low air-conditioner drone in a room that’s trying very hard to stay quiet.. Quietly building, awkward and playful mood with a organic and verdant, vivid tonal palette, fluorescent-hum drone bed, tight gated micro-percussion, glitchy stutter edits, dry close-mic transients, subtle lo-fi grit textures, and sustained pads and slow drones. Instruments: Rhodes piano, bass clarinet (squeak accents), analog synth pad, rim-click drum machine. Timbre: cool sterile-green sheen over cassette-warm grain; dry and close with occasional glitch flicker. Harmonic feel: suspended with a comic, slightly tense edge. Dynamic shape: steady neon drone, then a brief clarinet squeak motif and busier rim-click grid bloom in the middle, settling back to the hum. Drawing from: fluorescent light ballast buzz, HVAC vent whoosh with occasional rattle, paper cup tap on tabletop, muffled hallway footsteps on carpet, faint door latch click. 78 BPM, in A minor, slow tempo, dense density, 15 seconds long. Instrumental only, no vocals, no lyrics."
+
+================================================================================
+ STEP 6: ELEVENLABS COMPOSITION PLAN (/v1/music/plan)
+================================================================================
+
+Request payload:
+{
+  "prompt": "Instrumental music track. Genre: lo-fi downtempo. Scene: A fluorescent-lit office corner stretches back in cool, flat light, with a grid ceiling and long vent lines pulling the eye into depth. In the foreground, a person leans into the frame with wide eyes and a startled expression, while a cluttered table and blank whiteboard sit softly out of focus behind. The air feels dry and quiet, like a room paused between meetings.. Vibe: fluorescent-dry stillness, beige institutional hush, slightly grainy webcam immediacy, cool sterile spaciousness. Setting: null indoor. Sounds like: A sudden clarinet squeak cutting through a long, low air-conditioner drone in a room that\u2019s trying very hard to stay quiet.. Quietly building, awkward and playful mood with a organic and verdant, vivid tonal palette, fluorescent-hum drone bed, tight gated micro-percussion, glitchy stutter edits, dry close-mic transients, subtle lo-fi grit textures, and sustained pads and slow drones. Instruments: Rhodes piano, bass clarinet (squeak accents), analog synth pad, rim-click drum machine. Timbre: cool sterile-green sheen over cassette-warm grain; dry and close with occasional glitch flicker. Harmonic feel: suspended with a comic, slightly tense edge. Dynamic shape: steady neon drone, then a brief clarinet squeak motif and busier rim-click grid bloom in the middle, settling back to the hum. Drawing from: fluorescent light ballast buzz, HVAC vent whoosh with occasional rattle, paper cup tap on tabletop, muffled hallway footsteps on carpet, faint door latch click. 78 BPM, in A minor, slow tempo, dense density, 15 seconds long. Instrumental only, no vocals, no lyrics.",
+  "music_length_ms": 15000,
+  "prompt_influence": 0.85,
+  "force_instrumental": true
+}
+
+Response: composition_plan JSON (opaque, passed to next step)
+
+================================================================================
+ STEP 7: ELEVENLABS AUDIO GENERATION (/v1/music)
+================================================================================
+
+Request: { composition_plan: <from previous step>, output_format: "mp3" }
+
+Output: 65501d1e01e6.mp3
+Saved to: backend/audio_files/65501d1e01e6.mp3
+
+================================================================================
+  TRACE COMPLETE — 65501d1e01e6.mp3
+================================================================================

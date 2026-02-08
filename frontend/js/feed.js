@@ -3,20 +3,33 @@ import * as audioPlayer from './audio-player.js';
 import { navigate } from './router.js';
 import { timeAgo } from './ui.js';
 
-let currentPage = 1;
+let observer = null;
+let currentlyPlaying = null;
 
 export function render(container) {
   container.innerHTML = '<div class="feed-loading">Loading...</div>';
+  container.classList.add('feed-scroll');
   loadFeed(container, 1);
+  return () => cleanup(container);
+}
+
+function cleanup(container) {
+  container.classList.remove('feed-scroll');
+  if (observer) { observer.disconnect(); observer = null; }
+  if (currentlyPlaying) {
+    currentlyPlaying.feedStop();
+    currentlyPlaying = null;
+  }
+  audioPlayer.clearPlayers();
 }
 
 async function loadFeed(container, page) {
   try {
     const data = await api.getFeed(page);
-    currentPage = page;
     container.innerHTML = '';
 
     if (data.posts.length === 0) {
+      container.classList.remove('feed-scroll');
       container.innerHTML = `
         <div class="empty-state">
           <p>No posts yet</p>
@@ -25,17 +38,25 @@ async function loadFeed(container, page) {
       return;
     }
 
+    const items = [];
+
     for (const post of data.posts) {
-      container.appendChild(createPostCard(post, container, page));
+      const { wrapper, audio } = createPostCard(post);
+      container.appendChild(wrapper);
+      items.push({ wrapper, audio });
     }
 
     if (data.pages > 1) {
       const pager = document.createElement('div');
-      pager.className = 'pagination';
+      pager.className = 'feed-pagination-snap';
       if (page > 1) {
         const prev = document.createElement('button');
         prev.textContent = 'Newer';
-        prev.addEventListener('click', () => loadFeed(container, page - 1));
+        prev.addEventListener('click', () => {
+          cleanup(container);
+          container.classList.add('feed-scroll');
+          loadFeed(container, page - 1);
+        });
         pager.appendChild(prev);
       }
       const info = document.createElement('span');
@@ -45,13 +66,41 @@ async function loadFeed(container, page) {
       if (page < data.pages) {
         const next = document.createElement('button');
         next.textContent = 'Older';
-        next.addEventListener('click', () => loadFeed(container, page + 1));
+        next.addEventListener('click', () => {
+          cleanup(container);
+          container.classList.add('feed-scroll');
+          loadFeed(container, page + 1);
+        });
         pager.appendChild(next);
       }
       container.appendChild(pager);
     }
+
+    setupAutoplay(items);
   } catch (e) {
     container.innerHTML = `<div class="error-msg">${e.message}</div>`;
+  }
+}
+
+function setupAutoplay(items) {
+  if (observer) observer.disconnect();
+
+  observer = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (entry.isIntersecting && entry.intersectionRatio >= 0.6) {
+        const audio = entry.target._feedAudio;
+        if (audio && audio !== currentlyPlaying) {
+          if (currentlyPlaying) currentlyPlaying.feedStop();
+          currentlyPlaying = audio;
+          audio.feedPlay();
+        }
+      }
+    }
+  }, { threshold: 0.6 });
+
+  for (const { wrapper, audio } of items) {
+    wrapper._feedAudio = audio;
+    observer.observe(wrapper);
   }
 }
 
@@ -59,29 +108,10 @@ function createPostCard(post) {
   const wrapper = document.createElement('div');
   wrapper.className = 'post-card-wrapper';
 
-  // Header row: @username ... time (above card)
-  const headerRow = document.createElement('div');
-  headerRow.className = 'post-card-header';
-  const username = document.createElement('a');
-  username.className = 'username-link';
-  username.textContent = `${post.username}`;
-  username.href = `#/profile/${post.username}`;
-  headerRow.appendChild(username);
-  const time = document.createElement('span');
-  time.className = 'time-ago';
-  time.textContent = timeAgo(post.created_at);
-  headerRow.appendChild(time);
-  wrapper.appendChild(headerRow);
-
-  // Card row: card + star column
-  const cardRow = document.createElement('div');
-  cardRow.className = 'post-card-row';
-
   const card = document.createElement('div');
   card.className = 'post-card';
   card.style.boxShadow = `0 0 30px ${post.color_hex}20, 0 0 60px ${post.color_hex}10`;
 
-  // Image container with overlay
   const imageContainer = document.createElement('div');
   imageContainer.className = 'post-card-image-container';
 
@@ -90,7 +120,6 @@ function createPostCard(post) {
   img.src = post.image_url;
   img.alt = 'Post image';
   img.loading = 'lazy';
-  img.addEventListener('click', () => navigate(`/post/${post.id}`));
   imageContainer.appendChild(img);
 
   // Color overlay
@@ -99,22 +128,55 @@ function createPostCard(post) {
   colorOverlay.style.background = post.color_hex;
   imageContainer.appendChild(colorOverlay);
 
-  // Waveform overlay on image
+  // Waveform overlay (noClick — handled by imageContainer)
   const audioDiv = document.createElement('div');
-  audioPlayer.createPlayer(post.audio_url, audioDiv, post.color_hex, { overlay: true });
+  const audio = audioPlayer.createPlayer(post.audio_url, audioDiv, post.color_hex, { overlay: true, noClick: true });
   imageContainer.appendChild(audioDiv);
 
+  // Info overlay at bottom of image
+  const infoOverlay = document.createElement('div');
+  infoOverlay.className = 'post-card-info';
+
+  const username = document.createElement('a');
+  username.className = 'post-card-info-username';
+  username.textContent = post.username;
+  username.href = `#/profile/${post.username}`;
+  username.addEventListener('click', (e) => e.stopPropagation());
+
+  const right = document.createElement('div');
+  right.className = 'post-card-info-right';
+
+  const star = document.createElement('a');
+  star.className = 'post-card-info-star';
+  star.innerHTML = `&#9733; ${post.comment_count}`;
+  star.href = `#/post/${post.id}`;
+  star.addEventListener('click', (e) => e.stopPropagation());
+
+  const time = document.createElement('span');
+  time.className = 'post-card-info-time';
+  time.textContent = timeAgo(post.created_at);
+
+  right.appendChild(star);
+  right.appendChild(time);
+  infoOverlay.appendChild(username);
+  infoOverlay.appendChild(right);
+  imageContainer.appendChild(infoOverlay);
+
+  // Click anywhere on image to toggle audio
+  imageContainer.addEventListener('click', () => {
+    if (!audio) return;
+    if (!audio.paused) {
+      audio.feedStop();
+      currentlyPlaying = null;
+    } else {
+      if (currentlyPlaying && currentlyPlaying !== audio) currentlyPlaying.feedStop();
+      currentlyPlaying = audio;
+      audio.feedPlay();
+    }
+  });
+
   card.appendChild(imageContainer);
-  cardRow.appendChild(card);
+  wrapper.appendChild(card);
 
-  // Star column
-  const starCol = document.createElement('div');
-  starCol.className = 'post-card-star-col';
-  starCol.innerHTML = `<span class="star-icon">★</span><span class="star-count">${post.comment_count}</span>`;
-  starCol.style.cursor = 'pointer';
-  starCol.addEventListener('click', () => navigate(`/post/${post.id}`));
-  cardRow.appendChild(starCol);
-
-  wrapper.appendChild(cardRow);
-  return wrapper;
+  return { wrapper, audio };
 }

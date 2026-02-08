@@ -1,0 +1,181 @@
+================================================================================
+  PIPELINE TRACE — POST
+  ID: 480e8e593bcf  |  User: pascal  |  2026-02-08T06:34:51.712614
+================================================================================
+
+================================================================================
+ STEP 1: COLOR DERIVATION
+================================================================================
+
+Input hex: #99666f
+
+{
+  "hex": "#99666f",
+  "hue_category": "warm_red",
+  "saturation": 0.2,
+  "lightness": 0.5
+}
+
+================================================================================
+ STEP 2: IMAGE ANALYSIS (OpenAI Vision → gpt-5.2)
+================================================================================
+
+Input: user-uploaded image (binary)
+
+Output (ImageAnalysis):
+{
+  "scene_description": "A dim, fluorescent-lit office corner recedes into a soft gray background, with a drop-ceiling grid and a long ventilation strip drawing the eye into depth. In the foreground, a person leans into frame, arms raised in a playful V-sign gesture, their face softly blurred by low light and camera noise. The space feels sparse and echo-prone, with hard surfaces (tile ceiling, painted walls, laminate table) catching a cold, flat sheen.",
+  "detected_objects": [
+    "drop ceiling tiles",
+    "ceiling ventilation grille",
+    "white painted walls",
+    "laminate table surface",
+    "mugs/cups",
+    "bottle (possibly water bottle)",
+    "person in foreground with raised hands",
+    "dark clothing (sweater/turtleneck)"
+  ],
+  "vibe": "fluorescent-dry, grainy-cool, late-shift hush, playful intrusion",
+  "emotion": "tired camaraderie with a flicker of mischievous defiance",
+  "dominant_colors": [
+    "cool office white",
+    "soft concrete gray",
+    "muted olive-brown fabric",
+    "charcoal shadow tones",
+    "pale beige skin tones"
+  ],
+  "environment": "indoor",
+  "time_of_day": "night",
+  "location_hint": "a quiet office break area or classroom-like workspace with a table and ceiling vents",
+  "ambient_sound_associations": [
+    "fluorescent light ballast buzz",
+    "HVAC vent whisper and occasional rattle",
+    "ceramic mug clink against a tabletop",
+    "distant chair legs scraping on linoleum",
+    "soft phone vibration or notification ping from another room",
+    "faint keyboard tapping echoing down the hall",
+    "a bottle cap twisting and plastic crinkling"
+  ],
+  "sonic_metaphor": "A thin neon hum under a muffled laugh\u2014like a cassette recording of a midnight break, slightly warped at the edges."
+}
+
+================================================================================
+ STEP 3: SQUIGGLE FEATURE EXTRACTION
+================================================================================
+
+Output (SquiggleFeatures):
+{
+  "total_length": 0.424974,
+  "bounding_box_area": 0.046743,
+  "average_speed": 0.000845,
+  "speed_variance": 2e-06,
+  "point_count": 31
+}
+
+================================================================================
+ STEP 4: IMAGE ENHANCEMENT PROMPT (OpenAI → gpt-5.2)
+================================================================================
+
+Input: ImageAnalysis + ColorInput + SquiggleFeatures
+
+Output (ImageEnhancementPrompt):
+{
+  "emotional_intent": "Turn the tired late-shift camaraderie into a muted, defiant after-hours warmth\u2014like a private joke glowing under sterile lights.",
+  "visual_directive": "Grade the scene toward low-saturation warm red/mauve undertones (#99666f), keeping the fluorescent chill in the highlights while deepening shadows with a soft, cinematic haze.",
+  "morphing_prompt": "Preserve the exact office corner and the person\u2019s V-sign pose, but shift the mood into a midnight break-room reverie: cool fluorescent whites become slightly green-cyan in the brightest areas while midtones and shadows bloom with a dusty mauve warmth. Add gentle film grain and subtle halation around ceiling lights and reflective surfaces, with a faint vignette that pulls focus toward the foreground figure without sharpening their blur. Enhance texture in the ceiling grid and ventilation strip with soft contrast, and introduce a thin atmospheric veil that makes the depth feel quieter, more intimate, and a little rebellious.",
+  "style_reference": "Sofia Coppola\u2019s quiet nocturnal minimalism with subtle 35mm film grain"
+}
+
+================================================================================
+ STEP 5: IMAGE MORPHING (OpenAI → gpt-image-1)
+================================================================================
+
+Input image: original + color overlay (Pillow)
+Prompt sent to gpt-image-1:
+
+  "Preserve the exact office corner and the person’s V-sign pose, but shift the mood into a midnight break-room reverie: cool fluorescent whites become slightly green-cyan in the brightest areas while midtones and shadows bloom with a dusty mauve warmth. Add gentle film grain and subtle halation around ceiling lights and reflective surfaces, with a faint vignette that pulls focus toward the foreground figure without sharpening their blur. Enhance texture in the ceiling grid and ventilation strip with soft contrast, and introduce a thin atmospheric veil that makes the depth feel quieter, more intimate, and a little rebellious."
+
+Output: morphed image bytes (stored as post image)
+
+================================================================================
+ STEP 6: AUDIO STRUCTURED OBJECT (OpenAI → gpt-5.2)
+================================================================================
+
+Input: ImageAnalysis + ColorInput + SquiggleFeatures
+
+Output (AudioStructuredObject):
+{
+  "audio_type": "music",
+  "mood": {
+    "primary": "weary",
+    "secondary": "mischievous"
+  },
+  "energy": 0.32,
+  "tempo": "slow",
+  "density": "sparse",
+  "texture": [
+    "tape-warp wobble",
+    "fluorescent-hum drone bed",
+    "soft lo-fi grit",
+    "dry room reverb tails"
+  ],
+  "sound_references": [
+    "fluorescent light ballast buzz",
+    "HVAC vent whisper with occasional rattle",
+    "ceramic mug clink on laminate",
+    "distant chair scrape on linoleum",
+    "faint notification ping"
+  ],
+  "duration_seconds": 15,
+  "bpm": 78,
+  "musical_key": "A minor",
+  "relation_to_parent": "original",
+  "confidence": 0.78,
+  "instruments": [
+    "Rhodes piano",
+    "analog synth pad",
+    "sub bass",
+    "rim-click drum machine"
+  ],
+  "genre_hint": "lo-fi downtempo",
+  "harmonic_mood": "suspended and slightly bittersweet",
+  "dynamic_shape": "gentle fade-in on neon hum, a small rhythmic pulse enters halfway, then dissolves back into hiss",
+  "sonic_palette": "cassette-warmed, grainy and cool with a muted warm-red tint; slightly warped at the edges"
+}
+
+================================================================================
+ STEP 7: COMPILED PROMPT (deterministic logic)
+================================================================================
+
+Input: AudioStructuredObject + ColorInput + ImageAnalysis + SquiggleFeatures
+
+Output (prompt string sent to ElevenLabs):
+
+  "Instrumental music track. Genre: lo-fi downtempo. Scene: A dim, fluorescent-lit office corner recedes into a soft gray background, with a drop-ceiling grid and a long ventilation strip drawing the eye into depth. In the foreground, a person leans into frame, arms raised in a playful V-sign gesture, their face softly blurred by low light and camera noise. The space feels sparse and echo-prone, with hard surfaces (tile ceiling, painted walls, laminate table) catching a cold, flat sheen.. Vibe: fluorescent-dry, grainy-cool, late-shift hush, playful intrusion. Setting: night indoor. Sounds like: A thin neon hum under a muffled laugh—like a cassette recording of a midnight break, slightly warped at the edges.. Quietly building, weary and mischievous mood with a warm and bold, subdued tonal palette, tape-warp wobble, fluorescent-hum drone bed, soft lo-fi grit, dry room reverb tails textures, and sustained pads and slow drones with focused simplicity. Instruments: Rhodes piano, analog synth pad, sub bass, rim-click drum machine. Timbre: cassette-warmed, grainy and cool with a muted warm-red tint; slightly warped at the edges. Harmonic feel: suspended and slightly bittersweet. Dynamic shape: gentle fade-in on neon hum, a small rhythmic pulse enters halfway, then dissolves back into hiss. Drawing from: fluorescent light ballast buzz, HVAC vent whisper with occasional rattle, ceramic mug clink on laminate, distant chair scrape on linoleum, faint notification ping. 78 BPM, in A minor, slow tempo, sparse density, 15 seconds long. Instrumental only, no vocals, no lyrics."
+
+================================================================================
+ STEP 8: ELEVENLABS COMPOSITION PLAN (/v1/music/plan)
+================================================================================
+
+Request payload:
+{
+  "prompt": "Instrumental music track. Genre: lo-fi downtempo. Scene: A dim, fluorescent-lit office corner recedes into a soft gray background, with a drop-ceiling grid and a long ventilation strip drawing the eye into depth. In the foreground, a person leans into frame, arms raised in a playful V-sign gesture, their face softly blurred by low light and camera noise. The space feels sparse and echo-prone, with hard surfaces (tile ceiling, painted walls, laminate table) catching a cold, flat sheen.. Vibe: fluorescent-dry, grainy-cool, late-shift hush, playful intrusion. Setting: night indoor. Sounds like: A thin neon hum under a muffled laugh\u2014like a cassette recording of a midnight break, slightly warped at the edges.. Quietly building, weary and mischievous mood with a warm and bold, subdued tonal palette, tape-warp wobble, fluorescent-hum drone bed, soft lo-fi grit, dry room reverb tails textures, and sustained pads and slow drones with focused simplicity. Instruments: Rhodes piano, analog synth pad, sub bass, rim-click drum machine. Timbre: cassette-warmed, grainy and cool with a muted warm-red tint; slightly warped at the edges. Harmonic feel: suspended and slightly bittersweet. Dynamic shape: gentle fade-in on neon hum, a small rhythmic pulse enters halfway, then dissolves back into hiss. Drawing from: fluorescent light ballast buzz, HVAC vent whisper with occasional rattle, ceramic mug clink on laminate, distant chair scrape on linoleum, faint notification ping. 78 BPM, in A minor, slow tempo, sparse density, 15 seconds long. Instrumental only, no vocals, no lyrics.",
+  "music_length_ms": 15000,
+  "prompt_influence": 0.85,
+  "force_instrumental": true
+}
+
+Response: composition_plan JSON (opaque, passed to next step)
+
+================================================================================
+ STEP 9: ELEVENLABS AUDIO GENERATION (/v1/music)
+================================================================================
+
+Request: { composition_plan: <from previous step>, output_format: "mp3" }
+
+Output: 480e8e593bcf.mp3
+Saved to: backend/audio_files/480e8e593bcf.mp3
+
+================================================================================
+  TRACE COMPLETE — 480e8e593bcf.mp3
+================================================================================

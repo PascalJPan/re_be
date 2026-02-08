@@ -1,4 +1,5 @@
 import json
+import logging
 import uuid
 from pathlib import Path
 
@@ -20,7 +21,10 @@ from backend.services.audio_generator import generate_audio
 from backend.services.image_analysis import analyze_image
 from backend.services.prompt_compiler import compile_prompt
 from backend.services.prompt_object_generator import generate_audio_object
+from backend.services.pipeline_trace import write_trace
 from backend.services.squiggle_extraction import extract_features
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["comments"])
 
@@ -106,6 +110,24 @@ async def create_comment(
         ),
     )
     await db.commit()
+
+    try:
+        trace_path = write_trace(
+            trace_type="comment",
+            item_id=comment_id,
+            username=user["username"],
+            color_hex=color_hex,
+            color=color,
+            image_analysis=image_analysis,
+            squiggle_features=squiggle_features,
+            structured_object=structured_object,
+            compiled_prompt=prompt_text,
+            audio_filename=audio_filename,
+            parent_object=parent_object,
+        )
+        logger.info("Pipeline trace saved: %s", trace_path)
+    except Exception as e:
+        logger.warning("Failed to write pipeline trace: %s", e)
 
     row = await db.execute_fetchall(
         "SELECT created_at FROM comments WHERE id = ?", (comment_id,)

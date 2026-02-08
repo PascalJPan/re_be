@@ -214,17 +214,26 @@ export function createPlayer(audioUrl, container, color = '#ff4444', opts = {}) 
       if (!audio.paused) animId = requestAnimationFrame(simpleTick);
     }
 
-    canvas.addEventListener('click', () => {
-      if (audio.paused) {
+    audio.addEventListener('play', () => {
+      if (!simpleActive) {
         simpleActive = true;
-        audio.play().catch(() => {});
         simpleTick();
-      } else {
-        audio.pause();
-        simpleActive = false;
-        if (peaks) drawWaveform(canvas.getContext('2d'), peaks, 0, color, height, false);
       }
     });
+
+    if (!opts.noClick) {
+      canvas.addEventListener('click', () => {
+        if (audio.paused) {
+          simpleActive = true;
+          audio.play().catch(() => {});
+          simpleTick();
+        } else {
+          audio.pause();
+          simpleActive = false;
+          if (peaks) drawWaveform(canvas.getContext('2d'), peaks, 0, color, height, false);
+        }
+      });
+    }
 
     audio.addEventListener('ended', () => {
       simpleActive = false;
@@ -234,6 +243,23 @@ export function createPlayer(audioUrl, container, color = '#ff4444', opts = {}) 
     audio.addEventListener('pause', () => {
       if (animId) { cancelAnimationFrame(animId); animId = null; }
     });
+
+    // External control for feed autoplay
+    audio.feedPlay = () => {
+      if (audio.paused) {
+        simpleActive = true;
+        audio.play().catch(() => {});
+        simpleTick();
+      }
+    };
+
+    audio.feedStop = () => {
+      audio.pause();
+      audio.currentTime = 0;
+      simpleActive = false;
+      if (animId) { cancelAnimationFrame(animId); animId = null; }
+      if (peaks) drawWaveform(canvas.getContext('2d'), peaks, 0, color, height, false);
+    };
   }
 
   wrapper.appendChild(audio);

@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS posts (
     image_analysis    TEXT NOT NULL,
     squiggle_features TEXT NOT NULL,
     compiled_prompt   TEXT NOT NULL DEFAULT '',
+    enhancement_prompt TEXT NOT NULL DEFAULT '',
     audio_filename    TEXT NOT NULL,
     created_at        TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now'))
 );
@@ -57,6 +58,14 @@ async def init_db():
     await _db.execute("PRAGMA journal_mode=WAL")
     await _db.execute("PRAGMA foreign_keys=ON")
     await _db.executescript(SCHEMA)
+
+    # Migrate existing databases: add enhancement_prompt column if missing
+    try:
+        await _db.execute("ALTER TABLE posts ADD COLUMN enhancement_prompt TEXT NOT NULL DEFAULT ''")
+        await _db.commit()
+    except Exception:
+        pass  # Column already exists
+
     await _db.execute(
         "INSERT OR IGNORE INTO users (id, username, password_hash) VALUES (1, 'pascal', 'demo')"
     )

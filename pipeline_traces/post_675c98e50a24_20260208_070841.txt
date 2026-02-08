@@ -1,0 +1,185 @@
+================================================================================
+  PIPELINE TRACE — POST
+  ID: 675c98e50a24  |  User: pascal  |  2026-02-08T07:08:41.632909
+================================================================================
+
+================================================================================
+ STEP 1: COLOR DERIVATION
+================================================================================
+
+Input hex: #cf3830
+
+{
+  "hex": "#cf3830",
+  "hue_category": "warm_red",
+  "saturation": 0.624,
+  "lightness": 0.5
+}
+
+================================================================================
+ STEP 2: IMAGE ANALYSIS (OpenAI Vision → gpt-5.2)
+================================================================================
+
+Input: user-uploaded image (binary)
+
+Output (ImageAnalysis):
+{
+  "scene_description": "A tightly framed, high-contrast portrait fills the space with a stern, forward-facing gaze, lit by cool, clinical highlights that catch on pale hair and textured skin. The background falls into a soft, official blur\u2014suggesting flags and dark wood\u2014creating shallow depth that presses the subject toward the viewer like a spotlighted podium moment.",
+  "detected_objects": [
+    "human face (close-up portrait)",
+    "light blond/gray hair",
+    "blue suit jacket",
+    "white dress shirt",
+    "blue necktie",
+    "American flag lapel pin (enamel/metal)",
+    "blurred U.S. flag (fabric)",
+    "dark wooden furniture/background"
+  ],
+  "vibe": "polished-cold formality, spotlighted tension, lacquered authority, airless stillness",
+  "emotion": "compressed resolve edged with guarded irritation",
+  "dominant_colors": [
+    "steel blue suit",
+    "icy white shirt",
+    "cool cyan-blue tie sheen",
+    "pale silver-blond hair",
+    "warm peach-tan skin tones",
+    "deep mahogany-brown background",
+    "muted flag red and off-white"
+  ],
+  "environment": "indoor",
+  "time_of_day": "null",
+  "location_hint": "an official government office or formal institutional interior with a U.S. flag nearby",
+  "ambient_sound_associations": [
+    "low HVAC hum diffused through vents",
+    "soft camera shutter clicks and a faint motorized lens whir",
+    "distant muffled footsteps on carpeted hallway",
+    "a restrained rustle of suit fabric as posture settles",
+    "subtle flag fabric whisper from minor air movement",
+    "quiet fluorescent ballast buzz under the room tone",
+    "a far-off door latch and cushioned thud"
+  ],
+  "sonic_metaphor": "A single, hard piano note held under fluorescent light, with a thin ribbon of static tightening around it."
+}
+
+================================================================================
+ STEP 3: SQUIGGLE FEATURE EXTRACTION
+================================================================================
+
+Output (SquiggleFeatures):
+{
+  "total_length": 0.836342,
+  "bounding_box_area": 0.051578,
+  "average_speed": 0.00037,
+  "speed_variance": 0.0,
+  "point_count": 137
+}
+
+================================================================================
+ STEP 4: IMAGE ENHANCEMENT PROMPT (OpenAI → gpt-5.2)
+================================================================================
+
+Input: ImageAnalysis + ColorInput + SquiggleFeatures
+
+Output (ImageEnhancementPrompt):
+{
+  "emotional_intent": "Intensify the compressed resolve into a simmering, pressurized authority\u2014controlled on the surface, volatile underneath.",
+  "visual_directive": "Grade the image toward warm red undertones with tightened contrast, deeper blacks, and a subtle heat-haze glow that turns the clinical spotlight into a charged, confrontational atmosphere.",
+  "morphing_prompt": "Preserve the exact portrait and composition, but shift the lighting from cool, clinical highlights to a warmer, red-leaning key with restrained amber edges, as if the air has heated under scrutiny. Deepen shadows around the jawline, eye sockets, and suit folds; add fine, gritty film grain and micro-contrast to emphasize skin texture and the lacquered formality, while keeping the background flags and wood softly blurred. Introduce a faint vignette and a barely perceptible atmospheric haze that makes the scene feel airless and tense, with highlights slightly blooming like a flashbulb caught in rising pressure.",
+  "style_reference": "Political thriller cinematography in the vein of David Fincher (cool precision pushed into heated tension)"
+}
+
+================================================================================
+ STEP 5: IMAGE MORPHING (OpenAI → gpt-image-1)
+================================================================================
+
+Input image: original + color overlay (Pillow)
+Prompt sent to gpt-image-1:
+
+  "Preserve the exact portrait and composition, but shift the lighting from cool, clinical highlights to a warmer, red-leaning key with restrained amber edges, as if the air has heated under scrutiny. Deepen shadows around the jawline, eye sockets, and suit folds; add fine, gritty film grain and micro-contrast to emphasize skin texture and the lacquered formality, while keeping the background flags and wood softly blurred. Introduce a faint vignette and a barely perceptible atmospheric haze that makes the scene feel airless and tense, with highlights slightly blooming like a flashbulb caught in rising pressure."
+
+Output: morphed image bytes (stored as post image) — SUCCESS
+
+================================================================================
+ STEP 6: AUDIO STRUCTURED OBJECT (OpenAI → gpt-5.2)
+================================================================================
+
+Input: ImageAnalysis + ColorInput + SquiggleFeatures
+
+Output (AudioStructuredObject):
+{
+  "audio_type": "music",
+  "mood": {
+    "primary": "tense",
+    "secondary": "authoritative"
+  },
+  "energy": 0.38,
+  "tempo": "slow",
+  "density": "medium",
+  "texture": [
+    "staccato piano punctuations",
+    "thin static hiss",
+    "subtle mechanical room-tone",
+    "tight, gated reverb",
+    "low-end pressure drone"
+  ],
+  "sound_references": [
+    "close-mic piano key thump and felt noise",
+    "quiet fluorescent ballast buzz",
+    "low HVAC hum",
+    "soft camera shutter clicks",
+    "distant muffled hallway footsteps",
+    "subtle suit fabric rustle"
+  ],
+  "duration_seconds": 17,
+  "bpm": 74,
+  "musical_key": "F# minor",
+  "relation_to_parent": "original",
+  "confidence": 0.78,
+  "instruments": [
+    "felted upright piano",
+    "analog mono synth (sub drone)",
+    "muted snare with brushes",
+    "granular noise layer"
+  ],
+  "genre_hint": "minimal dark jazz",
+  "harmonic_mood": "suspended and unresolved, with clipped minor voicings",
+  "dynamic_shape": "held tension with sparse hits; slight mid-clip swell of noise and sub, then a controlled fade leaving the last piano tone hanging",
+  "sonic_palette": "cold, clinical top-end with warm red undertone in the low mids; tight, lacquered dynamics and a thin ribbon of static throughout"
+}
+
+================================================================================
+ STEP 7: COMPILED PROMPT (deterministic logic)
+================================================================================
+
+Input: AudioStructuredObject + ColorInput + ImageAnalysis + SquiggleFeatures
+
+Output (prompt string sent to ElevenLabs):
+
+  "Instrumental music track. Genre: minimal dark jazz. Scene: A tightly framed, high-contrast portrait fills the space with a stern, forward-facing gaze, lit by cool, clinical highlights that catch on pale hair and textured skin. The background falls into a soft, official blur—suggesting flags and dark wood—creating shallow depth that presses the subject toward the viewer like a spotlighted podium moment.. Vibe: polished-cold formality, spotlighted tension, lacquered authority, airless stillness. Setting: null indoor. Sounds like: A single, hard piano note held under fluorescent light, with a thin ribbon of static tightening around it.. Quietly building, tense and authoritative mood with a warm and bold tonal palette, Instruments: felted upright piano, analog mono synth (sub drone), muted snare with brushes, granular noise layer. Timbre: cold, clinical top-end with warm red undertone in the low mids; tight, lacquered dynamics and a thin ribbon of static throughout. Harmonic feel: suspended and unresolved, with clipped minor voicings. Dynamic shape: held tension with sparse hits; slight mid-clip swell of noise and sub, then a controlled fade leaving the last piano tone hanging. Drawing from: close-mic piano key thump and felt noise, quiet fluorescent ballast buzz, low HVAC hum, soft camera shutter clicks, distant muffled hallway footsteps, subtle suit fabric rustle. 74 BPM, in F# minor, slow tempo, medium density, 17 seconds long. Instrumental only, no vocals, no lyrics."
+
+================================================================================
+ STEP 8: ELEVENLABS COMPOSITION PLAN (/v1/music/plan)
+================================================================================
+
+Request payload:
+{
+  "prompt": "Instrumental music track. Genre: minimal dark jazz. Scene: A tightly framed, high-contrast portrait fills the space with a stern, forward-facing gaze, lit by cool, clinical highlights that catch on pale hair and textured skin. The background falls into a soft, official blur\u2014suggesting flags and dark wood\u2014creating shallow depth that presses the subject toward the viewer like a spotlighted podium moment.. Vibe: polished-cold formality, spotlighted tension, lacquered authority, airless stillness. Setting: null indoor. Sounds like: A single, hard piano note held under fluorescent light, with a thin ribbon of static tightening around it.. Quietly building, tense and authoritative mood with a warm and bold tonal palette, Instruments: felted upright piano, analog mono synth (sub drone), muted snare with brushes, granular noise layer. Timbre: cold, clinical top-end with warm red undertone in the low mids; tight, lacquered dynamics and a thin ribbon of static throughout. Harmonic feel: suspended and unresolved, with clipped minor voicings. Dynamic shape: held tension with sparse hits; slight mid-clip swell of noise and sub, then a controlled fade leaving the last piano tone hanging. Drawing from: close-mic piano key thump and felt noise, quiet fluorescent ballast buzz, low HVAC hum, soft camera shutter clicks, distant muffled hallway footsteps, subtle suit fabric rustle. 74 BPM, in F# minor, slow tempo, medium density, 17 seconds long. Instrumental only, no vocals, no lyrics.",
+  "music_length_ms": 17000,
+  "prompt_influence": 0.85,
+  "force_instrumental": true
+}
+
+Response: composition_plan JSON (opaque, passed to next step)
+
+================================================================================
+ STEP 9: ELEVENLABS AUDIO GENERATION (/v1/music)
+================================================================================
+
+Request: { composition_plan: <from previous step>, output_format: "mp3" }
+
+Output: 675c98e50a24.mp3
+Saved to: backend/audio_files/675c98e50a24.mp3
+
+================================================================================
+  TRACE COMPLETE — 675c98e50a24.mp3
+================================================================================

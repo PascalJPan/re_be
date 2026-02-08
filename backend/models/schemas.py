@@ -65,6 +65,7 @@ class ImageAnalysis(BaseModel):
     time_of_day: Optional[str] = None
     location_hint: Optional[str] = None
     ambient_sound_associations: List[str]
+    sonic_metaphor: Optional[str] = None
 
 
 class SquiggleFeatures(BaseModel):
@@ -73,6 +74,13 @@ class SquiggleFeatures(BaseModel):
     average_speed: float
     speed_variance: float
     point_count: int
+
+
+class ImageEnhancementPrompt(BaseModel):
+    emotional_intent: str
+    visual_directive: str
+    morphing_prompt: str
+    style_reference: str
 
 
 # --- Core Output ---
@@ -90,11 +98,16 @@ class AudioStructuredObject(BaseModel):
     density: Literal["sparse", "medium", "dense"]
     texture: List[str]
     sound_references: List[str]
-    duration_seconds: int = Field(ge=5, le=15)
+    duration_seconds: int = Field(ge=15, le=20)
     bpm: Optional[int] = Field(default=None, ge=60, le=180)
     musical_key: Optional[str] = Field(default=None)
     relation_to_parent: Literal["original", "mirror", "variation", "contrast"]
     confidence: float = Field(ge=0.0, le=1.0)
+    instruments: Optional[List[str]] = None
+    genre_hint: Optional[str] = None
+    harmonic_mood: Optional[str] = None
+    dynamic_shape: Optional[str] = None
+    sonic_palette: Optional[str] = None
 
 
 # --- Auth Models ---
@@ -148,6 +161,8 @@ class PostDetail(BaseModel):
     image_analysis: ImageAnalysis
     squiggle_features: SquiggleFeatures
     compiled_prompt: str = ""
+    enhancement_prompt: Optional[ImageEnhancementPrompt] = None
+    morph_status: Optional[str] = None
     comments: List["CommentDetail"] = []
     created_at: str
 

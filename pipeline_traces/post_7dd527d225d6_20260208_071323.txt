@@ -1,0 +1,182 @@
+================================================================================
+  PIPELINE TRACE — POST
+  ID: 7dd527d225d6  |  User: pascal  |  2026-02-08T07:13:23.713619
+================================================================================
+
+================================================================================
+ STEP 1: COLOR DERIVATION
+================================================================================
+
+Input hex: #01d8fe
+
+{
+  "hex": "#01d8fe",
+  "hue_category": "cool_cyan",
+  "saturation": 0.992,
+  "lightness": 0.5
+}
+
+================================================================================
+ STEP 2: IMAGE ANALYSIS (OpenAI Vision → gpt-5.2)
+================================================================================
+
+Input: user-uploaded image (binary)
+
+Output (ImageAnalysis):
+{
+  "scene_description": "A softly lit, slightly grainy indoor room stretches back under a grid of fluorescent ceiling tiles, creating a shallow, office-like depth that fades into gray. In the foreground, a person in a gray hoodie leans toward the camera with a squinting, tired focus, while the background recedes to a dim figure seated near a pale wall. The light feels cool and flat, with muted shadows that make the space sound like it has hard surfaces and a faint electronic hum.",
+  "detected_objects": [
+    "person in gray hoodie",
+    "ceiling tiles (drop ceiling)",
+    "fluorescent light fixture",
+    "white/gray walls",
+    "seated person in background",
+    "table or desk surface",
+    "pink fabric (possibly a blanket or clothing) in foreground"
+  ],
+  "vibe": "fluorescent-dry, muffled-industrial, cool-grainy, late-day sluggish",
+  "emotion": "weary curiosity mixed with self-conscious hesitation",
+  "dominant_colors": [
+    "cool gray",
+    "off-white ceiling",
+    "charcoal hoodie gray",
+    "muted beige skin tones",
+    "dusty pink fabric",
+    "dim shadowy black"
+  ],
+  "environment": "indoor",
+  "time_of_day": "null",
+  "location_hint": "a classroom or office-like room with a drop ceiling",
+  "ambient_sound_associations": [
+    "fluorescent light ballast buzzing",
+    "soft HVAC airflow through vents",
+    "chair legs faintly scraping on a hard floor",
+    "distant keyboard tapping from the back of the room",
+    "a hoodie fabric rustle as someone leans in",
+    "subtle room echo off bare walls",
+    "a quiet throat clear or small sniff"
+  ],
+  "sonic_metaphor": "A thin fluorescent hum wrapped around a close-mic breath, like a cassette recording of a quiet room trying to stay awake."
+}
+
+================================================================================
+ STEP 3: SQUIGGLE FEATURE EXTRACTION
+================================================================================
+
+Output (SquiggleFeatures):
+{
+  "total_length": 0.723427,
+  "bounding_box_area": 0.228927,
+  "average_speed": 0.001538,
+  "speed_variance": 4e-06,
+  "point_count": 30
+}
+
+================================================================================
+ STEP 4: IMAGE ENHANCEMENT PROMPT (OpenAI → gpt-5.2)
+================================================================================
+
+Input: ImageAnalysis + ColorInput + SquiggleFeatures
+
+Output (ImageEnhancementPrompt):
+{
+  "emotional_intent": "Amplify the weary curiosity into a lucid, late-night fluorescent trance\u2014quietly tense, intimate, and slightly unreal.",
+  "visual_directive": "Grade the scene toward high-saturation cool cyan with deeper blacks, crisp fluorescent highlights, and a thin veil of atmospheric haze to make the air feel electrically charged.",
+  "morphing_prompt": "Keep the exact composition and subjects, but push the room into a cyan-leaning, after-hours mood: cool the whites into icy blue, deepen the charcoal tones, and let the fluorescent panels bloom with a soft, clinical glow. Enhance the existing grain into a finer, more tactile film texture, adding subtle halation around highlights and a gentle vignette that pulls attention to the hoodie figure\u2019s face. Introduce a faint, low-energy haze and micro-contrast in the ceiling grid so the space feels like it\u2019s humming\u2014still, muffled, and slightly surreal\u2014without changing any objects or layout.",
+  "style_reference": "Neo-noir fluorescent realism with a subtle Gregory Crewdson suburban uncanny tone"
+}
+
+================================================================================
+ STEP 5: IMAGE MORPHING (OpenAI → gpt-image-1)
+================================================================================
+
+Input image: original + color overlay (Pillow)
+Prompt sent to gpt-image-1:
+
+  "Keep the exact composition and subjects, but push the room into a cyan-leaning, after-hours mood: cool the whites into icy blue, deepen the charcoal tones, and let the fluorescent panels bloom with a soft, clinical glow. Enhance the existing grain into a finer, more tactile film texture, adding subtle halation around highlights and a gentle vignette that pulls attention to the hoodie figure’s face. Introduce a faint, low-energy haze and micro-contrast in the ceiling grid so the space feels like it’s humming—still, muffled, and slightly surreal—without changing any objects or layout."
+
+Output: morphed image bytes (stored as post image) — SUCCESS
+
+================================================================================
+ STEP 6: AUDIO STRUCTURED OBJECT (OpenAI → gpt-5.2)
+================================================================================
+
+Input: ImageAnalysis + ColorInput + SquiggleFeatures
+
+Output (AudioStructuredObject):
+{
+  "audio_type": "music",
+  "mood": {
+    "primary": "cool-detached",
+    "secondary": "weary-curious"
+  },
+  "energy": 0.48,
+  "tempo": "medium",
+  "density": "dense",
+  "texture": [
+    "fluorescent-hum drone",
+    "close-mic breath/fabric foley",
+    "tight glitchy percussion",
+    "grainy tape hiss",
+    "soft room-echo smear"
+  ],
+  "sound_references": [
+    "fluorescent ballast buzz layered as a sustained synth tone",
+    "soft HVAC airflow as a noise bed",
+    "distant keyboard tapping turned into a hi-hat-like tick",
+    "chair scrape as an occasional reverse swell",
+    "hoodie rustle as rhythmic ghost notes"
+  ],
+  "duration_seconds": 18,
+  "bpm": 108,
+  "musical_key": "D minor",
+  "relation_to_parent": "original",
+  "confidence": 0.78,
+  "instruments": [
+    "digital pad (cyan, glassy)",
+    "Rhodes piano (muted)",
+    "808 kick",
+    "rimshot/snare (tight, dry)"
+  ],
+  "genre_hint": "minimal glitch-hop",
+  "harmonic_mood": "suspended and slightly uneasy",
+  "dynamic_shape": "breathing pulse with a small mid-clip lift, then a quick fade into hum",
+  "sonic_palette": "crystalline cool-cyan digital tones with cassette grain and dry fluorescent-room ambience"
+}
+
+================================================================================
+ STEP 7: COMPILED PROMPT (deterministic logic)
+================================================================================
+
+Input: AudioStructuredObject + ColorInput + ImageAnalysis + SquiggleFeatures
+
+Output (prompt string sent to ElevenLabs):
+
+  "Instrumental music track. Genre: minimal glitch-hop. Scene: A softly lit, slightly grainy indoor room stretches back under a grid of fluorescent ceiling tiles, creating a shallow, office-like depth that fades into gray. In the foreground, a person in a gray hoodie leans toward the camera with a squinting, tired focus, while the background recedes to a dim figure seated near a pale wall. The light feels cool and flat, with muted shadows that make the space sound like it has hard surfaces and a faint electronic hum.. Vibe: fluorescent-dry, muffled-industrial, cool-grainy, late-day sluggish. Setting: null indoor. Sounds like: A thin fluorescent hum wrapped around a close-mic breath, like a cassette recording of a quiet room trying to stay awake.. Quietly building, cool-detached and weary-curious mood with a crisp and spacious, vivid tonal palette, Instruments: digital pad (cyan, glassy), Rhodes piano (muted), 808 kick, rimshot/snare (tight, dry). Timbre: crystalline cool-cyan digital tones with cassette grain and dry fluorescent-room ambience. Harmonic feel: suspended and slightly uneasy. Dynamic shape: breathing pulse with a small mid-clip lift, then a quick fade into hum. Drawing from: fluorescent ballast buzz layered as a sustained synth tone, soft HVAC airflow as a noise bed, distant keyboard tapping turned into a hi-hat-like tick, chair scrape as an occasional reverse swell, hoodie rustle as rhythmic ghost notes. 108 BPM, in D minor, medium tempo, dense density, 18 seconds long. Instrumental only, no vocals, no lyrics."
+
+================================================================================
+ STEP 8: ELEVENLABS COMPOSITION PLAN (/v1/music/plan)
+================================================================================
+
+Request payload:
+{
+  "prompt": "Instrumental music track. Genre: minimal glitch-hop. Scene: A softly lit, slightly grainy indoor room stretches back under a grid of fluorescent ceiling tiles, creating a shallow, office-like depth that fades into gray. In the foreground, a person in a gray hoodie leans toward the camera with a squinting, tired focus, while the background recedes to a dim figure seated near a pale wall. The light feels cool and flat, with muted shadows that make the space sound like it has hard surfaces and a faint electronic hum.. Vibe: fluorescent-dry, muffled-industrial, cool-grainy, late-day sluggish. Setting: null indoor. Sounds like: A thin fluorescent hum wrapped around a close-mic breath, like a cassette recording of a quiet room trying to stay awake.. Quietly building, cool-detached and weary-curious mood with a crisp and spacious, vivid tonal palette, Instruments: digital pad (cyan, glassy), Rhodes piano (muted), 808 kick, rimshot/snare (tight, dry). Timbre: crystalline cool-cyan digital tones with cassette grain and dry fluorescent-room ambience. Harmonic feel: suspended and slightly uneasy. Dynamic shape: breathing pulse with a small mid-clip lift, then a quick fade into hum. Drawing from: fluorescent ballast buzz layered as a sustained synth tone, soft HVAC airflow as a noise bed, distant keyboard tapping turned into a hi-hat-like tick, chair scrape as an occasional reverse swell, hoodie rustle as rhythmic ghost notes. 108 BPM, in D minor, medium tempo, dense density, 18 seconds long. Instrumental only, no vocals, no lyrics.",
+  "music_length_ms": 18000,
+  "prompt_influence": 0.85,
+  "force_instrumental": true
+}
+
+Response: composition_plan JSON (opaque, passed to next step)
+
+================================================================================
+ STEP 9: ELEVENLABS AUDIO GENERATION (/v1/music)
+================================================================================
+
+Request: { composition_plan: <from previous step>, output_format: "mp3" }
+
+Output: 7dd527d225d6.mp3
+Saved to: backend/audio_files/7dd527d225d6.mp3
+
+================================================================================
+  TRACE COMPLETE — 7dd527d225d6.mp3
+================================================================================

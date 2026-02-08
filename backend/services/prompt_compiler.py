@@ -12,7 +12,7 @@ def compile_prompt(
     image_analysis: ImageAnalysis,
     squiggle: SquiggleFeatures,
 ) -> str:
-    """Compile all inputs into a vivid, scene-based prompt for ElevenLabs music generation."""
+    """Compile all inputs into a dense, emotionally specific prompt for ElevenLabs music generation."""
 
     # --- Color → tonal quality ---
     color_tone_map = {
@@ -26,6 +26,7 @@ def compile_prompt(
         "cool_green": "organic and verdant",
         "neutral_gray": "muted and minimal",
     }
+
     color_tone = color_tone_map.get(color.hue_category, "balanced")
 
     if color.saturation > 0.7:
@@ -75,8 +76,8 @@ def compile_prompt(
     # --- Texture ---
     texture_str = ", ".join(obj.texture) if obj.texture else "smooth"
 
-    # --- Sound references ---
-    refs = obj.sound_references[:3] if obj.sound_references else []
+    # --- Sound references (use up to 6) ---
+    refs = obj.sound_references[:6] if obj.sound_references else []
     refs_str = ", ".join(refs) if refs else "abstract tones"
 
     # --- Scene / narrative framing from image analysis ---
@@ -90,11 +91,24 @@ def compile_prompt(
         scene_parts.append(image_analysis.environment)
     scene_context = " ".join(scene_parts) if scene_parts else ""
 
-    # --- Build the prompt ---
-    prompt = f"Soundtrack for: {scene}. Vibe: {vibe}. "
+    # --- Build the prompt (direct and descriptive for ElevenLabs) ---
+
+    prompt = f"Instrumental {obj.audio_type} track. "
+
+    # Genre hint up front if available
+    if obj.genre_hint:
+        prompt += f"Genre: {obj.genre_hint}. "
+
+    prompt += f"Scene: {scene}. Vibe: {vibe}. "
+
     if scene_context:
         prompt += f"Setting: {scene_context}. "
 
+    # Sonic metaphor — the poetic essence
+    if image_analysis.sonic_metaphor:
+        prompt += f"Sounds like: {image_analysis.sonic_metaphor}. "
+
+    # Core musical description
     bpm_key_str = ""
     if obj.bpm is not None:
         bpm_key_str += f"{obj.bpm} BPM, "
@@ -102,10 +116,32 @@ def compile_prompt(
         bpm_key_str += f"in {obj.musical_key}, "
 
     prompt += (
-        f"An {energy_desc}, {mood_str} instrumental music track "
+        f"{energy_desc.capitalize()}, {mood_str} mood "
         f"with a {color_tone} tonal palette, "
-        f"{texture_str} textures, and {rhythm_desc}. "
-        f"Drawing from {refs_str}. "
+        #f"{texture_str} textures, and {rhythm_desc}. " #not needed right now do not put back in unless asked
+    )
+
+    # Instruments
+    if obj.instruments:
+        prompt += f"Instruments: {', '.join(obj.instruments)}. "
+
+    # Sonic palette / timbre
+    if obj.sonic_palette:
+        prompt += f"Timbre: {obj.sonic_palette}. "
+
+    # Harmonic mood
+    if obj.harmonic_mood:
+        prompt += f"Harmonic feel: {obj.harmonic_mood}. "
+
+    # Dynamic shape
+    if obj.dynamic_shape:
+        prompt += f"Dynamic shape: {obj.dynamic_shape}. "
+
+    # Sound references
+    prompt += f"Drawing from: {refs_str}. "
+
+    # Strict constraints
+    prompt += (
         f"{bpm_key_str}"
         f"{obj.tempo} tempo, {obj.density} density, "
         f"{obj.duration_seconds} seconds long. "

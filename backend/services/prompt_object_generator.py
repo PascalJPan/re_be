@@ -27,18 +27,24 @@ OUTPUT SCHEMA (return ONLY this JSON, no other text):
   "density": "sparse" | "medium" | "dense",
   "texture": ["list", "of", "texture", "descriptors"],
   "sound_references": ["concrete", "sound", "references"],
-  "duration_seconds": 5-15,
+  "duration_seconds": 15-20,
   "bpm": 60-180,
   "musical_key": "C major" | "A minor" | etc.,
   "relation_to_parent": "original" | "mirror" | "variation" | "contrast",
-  "confidence": 0.0-1.0
+  "confidence": 0.0-1.0,
+  "instruments": ["2-4 specific instruments, e.g. Rhodes piano, bowed bass, brushed snare"],
+  "genre_hint": "one genre/subgenre reference, e.g. lo-fi jazz, post-rock, ambient techno",
+  "harmonic_mood": "harmonic character, e.g. yearning, suspended, resolving, bittersweet",
+  "dynamic_shape": "how energy evolves, e.g. slow build, breathing, explosion then decay",
+  "sonic_palette": "timbral character, e.g. dusty vinyl warmth, crystalline digital, tape-saturated"
 }
 
 MAPPING RULES (priority order):
 
 1. IMAGE ANALYSIS (highest priority):
-   - scene_description + vibe + emotion → audio_type, mood
+   - scene_description + vibe + emotion → audio_type, mood, harmonic_mood
    - ambient_sound_associations → sound_references
+   - sonic_metaphor (if present) → use it to inspire instruments, sonic_palette, and dynamic_shape
    - Urban/energetic scenes → "music"
    - Abstract scenes → "music" (default)
    - Outdoor/nature scenes with rhythmic or emotional energy → "music"
@@ -64,11 +70,24 @@ MAPPING RULES (priority order):
    - total_length HIGH (>2.0) → more complex/layered textures
    - total_length LOW (<0.5) → simpler, focused textures
 
-4. DURATION: Reason holistically based on image vibe, scene complexity, and emotional weight. Simple calm scenes → shorter (5-8s). Complex emotional scenes → longer (10-15s).
+4. DURATION: Simple scenes → 15s. Complex emotional scenes → 20s.
 
 5. BPM: Map from tempo — slow→60-90, medium→90-130, fast→130-180. Pick a specific integer.
 
 6. MUSICAL KEY: Choose based on mood and color. Warm/happy → major keys (C, G, D, A major). Cool/melancholic → minor keys (A, D, E, B minor). Mysterious/dark → Eb minor, F# minor. Bright/energetic → E major, Bb major.
+
+7. INSTRUMENTS: Choose 2-4 specific instruments that match the scene:
+   - Natural/organic scenes → acoustic instruments (acoustic guitar, cello, kalimba, wooden flute)
+   - Urban/modern scenes → electronic instruments (analog synth, drum machine, electric bass)
+   - Warm colors → warm-toned instruments (Rhodes piano, flugelhorn, upright bass)
+   - Cool colors → crystalline instruments (vibraphone, glass marimba, digital pads)
+   - Be specific: "nylon-string guitar" not just "guitar", "808 kick" not just "drums"
+
+8. GENRE HINT: Pick one genre/subgenre that fits the overall feel. Be specific (e.g. "shoegaze" not "rock").
+
+9. SONIC PALETTE: Describe the timbral quality — think about whether it's warm/cold, analog/digital, clean/distorted, wet/dry.
+
+10. DYNAMIC SHAPE: How should the energy evolve over the track's duration? Consider the squiggle's gesture as a clue.
 
 If relation_to_parent is "original", this is a new post (not a comment).
 """
@@ -108,8 +127,7 @@ async def generate_audio_object(
         try:
             response = await client.chat.completions.create(
                 model=settings.openai_model,
-                temperature=0,
-                seed=42,
+                temperature=0.4,
                 response_format={"type": "json_object"},
                 messages=[
                     {"role": "system", "content": system},
