@@ -1,4 +1,4 @@
-# re
+# re:be
 
 Image-to-audio social media MVP. Upload an image, draw a gesture, pick a color, and get a generated soundtrack. Others can reply with their own image-audio comments, creating conversational audio threads.
 
