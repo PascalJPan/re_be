@@ -16,6 +16,8 @@ logger = logging.getLogger(__name__)
 
 SYSTEM_PROMPT = """You are an audio-intent generator. Given image analysis, a user-selected color, and squiggle gesture features, produce a JSON object that describes a short audio clip.
 
+IMPORTANT: Prefer audio_type "music" in most cases. Only choose "ambient" for scenes that are explicitly still, environmental, and non-rhythmic. "hybrid" should be rare.
+
 OUTPUT SCHEMA (return ONLY this JSON, no other text):
 {
   "audio_type": "music" | "ambient" | "hybrid",
@@ -26,6 +28,8 @@ OUTPUT SCHEMA (return ONLY this JSON, no other text):
   "texture": ["list", "of", "texture", "descriptors"],
   "sound_references": ["concrete", "sound", "references"],
   "duration_seconds": 5-15,
+  "bpm": 60-180,
+  "musical_key": "C major" | "A minor" | etc.,
   "relation_to_parent": "original" | "mirror" | "variation" | "contrast",
   "confidence": 0.0-1.0
 }
@@ -35,9 +39,11 @@ MAPPING RULES (priority order):
 1. IMAGE ANALYSIS (highest priority):
    - scene_description + vibe + emotion → audio_type, mood
    - ambient_sound_associations → sound_references
-   - Outdoor/nature scenes lean toward "ambient"
-   - Urban/energetic scenes lean toward "music"
-   - Abstract scenes lean toward "hybrid"
+   - Urban/energetic scenes → "music"
+   - Abstract scenes → "music" (default)
+   - Outdoor/nature scenes with rhythmic or emotional energy → "music"
+   - Only purely still, meditative, environmental scenes → "ambient"
+   - When in doubt, default to "music"
 
 2. COLOR (high priority):
    - warm_red, warm_orange, warm_magenta → warmer mood tones, bold textures
@@ -60,12 +66,17 @@ MAPPING RULES (priority order):
 
 4. DURATION: Reason holistically based on image vibe, scene complexity, and emotional weight. Simple calm scenes → shorter (5-8s). Complex emotional scenes → longer (10-15s).
 
+5. BPM: Map from tempo — slow→60-90, medium→90-130, fast→130-180. Pick a specific integer.
+
+6. MUSICAL KEY: Choose based on mood and color. Warm/happy → major keys (C, G, D, A major). Cool/melancholic → minor keys (A, D, E, B minor). Mysterious/dark → Eb minor, F# minor. Bright/energetic → E major, Bb major.
+
 If relation_to_parent is "original", this is a new post (not a comment).
 """
 
 COMMENT_ADDENDUM = """
 COMMENT MODE: A parent audio object is provided. You MUST:
 - Keep the comment sonically related to the parent
+- Use the SAME bpm, musical_key, and duration_seconds as the parent
 - Set relation_to_parent to "mirror", "variation", or "contrast" (NEVER "original")
 - "mirror": very similar mood/energy/texture, slight shifts
 - "variation": same family but noticeably different energy or texture
@@ -108,7 +119,15 @@ async def generate_audio_object(
             )
             raw = response.choices[0].message.content
             data = json.loads(raw)
-            return AudioStructuredObject(**data)
+            obj = AudioStructuredObject(**data)
+            if parent is not None:
+                overrides = {"duration_seconds": parent.duration_seconds}
+                if parent.bpm is not None:
+                    overrides["bpm"] = parent.bpm
+                if parent.musical_key is not None:
+                    overrides["musical_key"] = parent.musical_key
+                obj = obj.model_copy(update=overrides)
+            return obj
         except json.JSONDecodeError:
             logger.error("OpenAI returned invalid JSON: %s", raw)
             if attempt == 0:

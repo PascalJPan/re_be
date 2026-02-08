@@ -91,41 +91,90 @@ class AudioStructuredObject(BaseModel):
     texture: List[str]
     sound_references: List[str]
     duration_seconds: int = Field(ge=5, le=15)
+    bpm: Optional[int] = Field(default=None, ge=60, le=180)
+    musical_key: Optional[str] = Field(default=None)
     relation_to_parent: Literal["original", "mirror", "variation", "contrast"]
     confidence: float = Field(ge=0.0, le=1.0)
 
 
+# --- Auth Models ---
+
+class UserCreate(BaseModel):
+    username: str
+    password: str
+
+
+class UserLogin(BaseModel):
+    username: str
+    password: str
+
+
+class UserPublic(BaseModel):
+    id: int
+    username: str
+
+
+class AuthResponse(BaseModel):
+    user: UserPublic
+    token: str
+
+
 # --- API Response Models ---
 
-class PostData(BaseModel):
+class PostSummary(BaseModel):
     id: str
-    structured_object: AudioStructuredObject
+    username: str
+    image_url: str
     audio_url: str
+    color_hex: str
+    comment_count: int
+    created_at: str
+
+
+class FeedResponse(BaseModel):
+    posts: List[PostSummary]
+    total: int
+    page: int
+    pages: int
+
+
+class PostDetail(BaseModel):
+    id: str
+    username: str
+    image_url: str
+    audio_url: str
+    color_hex: str
+    structured_object: AudioStructuredObject
     image_analysis: ImageAnalysis
     squiggle_features: SquiggleFeatures
-    color: ColorInput
+    compiled_prompt: str = ""
+    comments: List["CommentDetail"] = []
+    created_at: str
+
+
+class CommentDetail(BaseModel):
+    id: str
+    username: str
+    audio_url: str
+    color_hex: str
+    structured_object: AudioStructuredObject
+    image_analysis: ImageAnalysis
+    squiggle_features: SquiggleFeatures
+    compiled_prompt: str = ""
+    created_at: str
 
 
 class PostCreateResponse(BaseModel):
-    post: PostData
-
-
-class CommentData(BaseModel):
-    id: str
-    structured_object: AudioStructuredObject
-    audio_url: str
-    image_analysis: ImageAnalysis
-    squiggle_features: SquiggleFeatures
-    color: ColorInput
+    post: PostDetail
 
 
 class CommentCreateResponse(BaseModel):
-    comment: CommentData
+    comment: CommentDetail
 
 
-class CommentsListResponse(BaseModel):
-    comments: List[CommentData]
-
-
-class ResetResponse(BaseModel):
-    status: str = "ok"
+class ProfileResponse(BaseModel):
+    user: UserPublic
+    posts: List[PostSummary]
+    total: int
+    page: int
+    pages: int

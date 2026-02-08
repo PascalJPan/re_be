@@ -8,46 +8,41 @@ export function hide(id) {
 
 export function showLoading(msg) {
   const el = document.getElementById('loading');
-  el.textContent = msg || 'Processing...';
-  el.style.display = '';
+  if (el) {
+    el.textContent = msg || 'Processing...';
+    el.style.display = '';
+  }
 }
 
 export function hideLoading() {
-  document.getElementById('loading').style.display = 'none';
+  const el = document.getElementById('loading');
+  if (el) el.style.display = 'none';
 }
 
 export function showError(msg) {
-  const el = document.getElementById('error');
-  el.textContent = msg;
-  el.style.display = '';
-  setTimeout(() => { el.style.display = 'none'; }, 6000);
+  toast(msg, true);
 }
 
-export function renderMetadata(obj, container) {
-  container.innerHTML = '';
-  const dl = document.createElement('dl');
-  dl.className = 'metadata';
+export function toast(msg, isError = false) {
+  const el = document.createElement('div');
+  el.className = 'toast' + (isError ? ' toast-error' : '');
+  el.textContent = msg;
+  document.body.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('toast-visible'));
+  setTimeout(() => {
+    el.classList.remove('toast-visible');
+    setTimeout(() => el.remove(), 300);
+  }, 3000);
+}
 
-  const fields = [
-    ['Type', obj.audio_type],
-    ['Mood', `${obj.mood.primary} / ${obj.mood.secondary}`],
-    ['Energy', (obj.energy * 100).toFixed(0) + '%'],
-    ['Tempo', obj.tempo],
-    ['Density', obj.density],
-    ['Texture', obj.texture.join(', ')],
-    ['Sounds', obj.sound_references.join(', ')],
-    ['Duration', obj.duration_seconds + 's'],
-    ['Relation', obj.relation_to_parent],
-  ];
+export function timeAgo(isoStr) {
+  const date = new Date(isoStr.endsWith('Z') ? isoStr : isoStr + 'Z');
+  const now = Date.now();
+  const diff = Math.floor((now - date.getTime()) / 1000);
 
-  for (const [label, value] of fields) {
-    const dt = document.createElement('dt');
-    dt.textContent = label;
-    const dd = document.createElement('dd');
-    dd.textContent = value;
-    dl.appendChild(dt);
-    dl.appendChild(dd);
-  }
-
-  container.appendChild(dl);
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
+  return date.toLocaleDateString();
 }

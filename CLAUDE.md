@@ -2,22 +2,24 @@
 
 Image-to-audio social media MVP. Users upload images, draw squiggle gestures, pick colors, and get AI-generated audio. Comments are also image-to-audio, with audio that relates to the parent post.
 
-**Backend**: FastAPI app in `backend/` — routes in `routers/`, AI pipeline in `services/`, Pydantic models in `models/schemas.py`, in-memory state in `state/store.py`.
+## Architecture
 
-**Frontend**: Vanilla JS SPA in `frontend/` — `app.js` orchestrates flow, `api.js` handles fetch calls, `squiggle-canvas.js` captures gestures, `image-capture.js` handles uploads, `audio-player.js` handles playback.
+**Backend**: FastAPI app in `backend/` — SQLite via aiosqlite (`re.db`), routes in `routers/`, AI pipeline in `services/`, Pydantic models in `models/schemas.py`, auth helpers in `auth.py`, DB schema in `database.py`.
 
-**AI Pipeline**: Image → OpenAI Vision analysis → GPT structured generation (AudioStructuredObject) → prompt compilation → ElevenLabs audio generation.
+**Frontend**: Vanilla JS SPA in `frontend/` with hash-based routing (`#/feed`, `#/post/:id`, `#/profile/:username`). Modules: `router.js`, `auth.js`, `api.js`, `feed.js`, `post-detail.js`, `profile.js`, `create-flow.js`, `audio-player.js`, `image-capture.js`, `squiggle-canvas.js`, `pixel-sampler.js`, `wiggly-bg.js`, `ui.js`.
 
-## TODOs
+**AI Pipeline**: Image → OpenAI Vision analysis → GPT structured generation (AudioStructuredObject) → prompt compilation → ElevenLabs Music API audio generation.
 
-1. **Log structured prompt to console only** — The `AudioStructuredObject` JSON and compiled prompt should be `console.log`'d in the frontend (or logged server-side) but NOT rendered in the UI metadata section
+**Auth**: Demo mode — hardcoded user "pascal". bcrypt + PyJWT dependencies installed for future real auth.
 
-2. **Add user display** — Show username "joey_vibez" below the post and to the left of comments. Hardcoded for now
+**Config** (`backend/config.py`): Loads `OPENAI_API_KEY`, `ELEVENLABS_API_KEY`, `openai_model` (gpt-5.2), `elevenlabs_music_model` (music_v1), `max_image_size_mb` (10) from `.env`.
 
-3. **Camera capture button** — Add a "Take Photo" button using `getUserMedia` / `capture="environment"` alongside the existing file upload
+## Key Implementation Details
 
-4. **Bias models toward music** — Update the LLM system prompt in `prompt_object_generator.py` to favor `audio_type: "music"` over `"ambient"` more often
-
-5. **Post image visible, comment images hidden** — Show the uploaded image at the top of the post view with audio player directly beneath. Comments show only audio + metadata, no image
-
-6. **Color glow overlay effect** — Apply the selected color as a glow/tint overlay on the post image and audio player area. Color comment items with their respective colors. Remove squiggle drawing from being visible on the image (capture points silently)
+- Audio files saved to `backend/audio_files/` and served at `/api/audio/`
+- Post images stored as BLOBs in SQLite, served via `/api/posts/{id}/image`
+- Squiggle points normalized to [0,1] with millisecond timestamps
+- Color derived from squiggle endpoint via radial color wheel (pixel-sampler.js)
+- Comments inherit parent post's bpm/key/duration and use relation_to_parent (mirror/variation/contrast)
+- Audio player uses Web Audio API waveform visualization with synchronized playback on post detail
+- Structured object and compiled prompt logged to console (not rendered in UI)

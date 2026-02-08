@@ -2,68 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>re</title>
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-  <header>
-    <h1>re</h1>
-  </header>
-
-  <main>
-    <div id="loading" style="display:none"></div>
-    <div id="error" style="display:none"></div>
-
-    <!-- CREATE PHASE -->
-    <section id="create-section">
-      <div class="canvas-container">
-        <canvas id="image-canvas" style="display:none"></canvas>
-        <canvas id="squiggle-overlay" style="display:none"></canvas>
-        <div class="upload-area" id="upload-prompt">
-          <label for="image-input">Choose an image</label>
-          <input type="file" id="image-input" accept="image/*" capture="environment">
-        </div>
-      </div>
-
-      <div class="controls" id="create-controls" style="display:none">
-        <input type="color" id="color-picker" value="#ff4444" title="Pick a color">
-        <button class="primary" id="btn-generate">Generate Sound</button>
-      </div>
-    </section>
-
-    <!-- VIEW PHASE -->
-    <section id="view-section" style="display:none">
-      <div class="post-section">
-        <h2>Post</h2>
-        <div id="post-audio"></div>
-        <div id="post-metadata"></div>
-      </div>
-
-      <div class="comments-section">
-        <h2>Comments</h2>
-        <div id="comments-list"></div>
-
-        <div class="view-controls">
-          <button id="btn-add-comment">Add Comment</button>
-          <button id="btn-reset">Reset</button>
-        </div>
-
-        <div class="comment-form" id="comment-form" style="display:none">
-          <input type="file" id="comment-image-input" accept="image/*" capture="environment">
-          <div class="canvas-container" id="comment-canvas-container" style="display:none">
-            <canvas id="comment-canvas"></canvas>
-            <canvas id="comment-squiggle-overlay"></canvas>
-          </div>
-          <div class="controls">
-            <input type="color" id="comment-color-picker" value="#4488ff" title="Pick a color">
-            <button class="primary" id="btn-generate-comment">Generate Comment</button>
-          </div>
-        </div>
-      </div>
-    </section>
-  </main>
-
+  <canvas id="wiggly-bg"></canvas>
+  <nav id="navbar" class="navbar"></nav>
+  <main id="app"></main>
   <script type="module" src="js/app.js"></script>
 </body>
 </html>

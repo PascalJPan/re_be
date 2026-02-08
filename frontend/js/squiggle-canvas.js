@@ -30,15 +30,8 @@ function onPointerDown(e) {
   drawing = true;
   points = [];
   startTime = Date.now();
-  overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
-  overlayCtx.strokeStyle = color;
-  overlayCtx.lineWidth = 3;
-  overlayCtx.lineCap = 'round';
-  overlayCtx.lineJoin = 'round';
-  overlayCtx.beginPath();
 
   const pt = getPoint(e);
-  overlayCtx.moveTo(pt.x * overlayCanvas.width, pt.y * overlayCanvas.height);
   points.push({ x: pt.x, y: pt.y, t: 0 });
 }
 
@@ -46,10 +39,6 @@ function onPointerMove(e) {
   if (!drawing) return;
   const pt = getPoint(e);
   const t = Date.now() - startTime;
-  overlayCtx.lineTo(pt.x * overlayCanvas.width, pt.y * overlayCanvas.height);
-  overlayCtx.stroke();
-  overlayCtx.beginPath();
-  overlayCtx.moveTo(pt.x * overlayCanvas.width, pt.y * overlayCanvas.height);
   points.push({ x: pt.x, y: pt.y, t });
 }
 

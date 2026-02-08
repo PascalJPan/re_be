@@ -44,6 +44,11 @@ function loadImage(file, canvas) {
   img.src = url;
 }
 
+export function loadFromFile(file) {
+  const canvas = document.getElementById('image-canvas');
+  loadImage(file, canvas);
+}
+
 export function getFile() {
   return currentFile;
 }

@@ -9,6 +9,8 @@ class Settings(BaseSettings):
     elevenlabs_music_model: str = "music_v1"
     prompt_influence: float = 0.6
     max_image_size_mb: int = 10
+    jwt_secret: str = "change-me-in-production"
+    database_path: str = "re.db"
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 

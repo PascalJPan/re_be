@@ -22,29 +22,40 @@ async def generate_audio(audio_id: str, prompt: str, obj: AudioStructuredObject)
         "xi-api-key": settings.elevenlabs_api_key,
     }
 
-    if obj.audio_type == "ambient":
-        url = f"{ELEVENLABS_BASE}/sound-generation"
-        payload = {
-            "text": prompt,
-            "duration_seconds": obj.duration_seconds,
-            "model_id": settings.elevenlabs_sfx_model,
-            "prompt_influence": settings.prompt_influence,
-        }
-    else:
-        # music or hybrid
-        url = f"{ELEVENLABS_BASE}/music"
-        payload = {
-            "prompt": prompt,
-            "music_length_ms": obj.duration_seconds * 1000,
-            "model_id": settings.elevenlabs_music_model,
-            "force_instrumental": True,
+    # Step 1 — get a composition plan
+    plan_url = f"{ELEVENLABS_BASE}/music/plan"
+    plan_payload = {
+        "prompt": prompt,
+        "music_length_ms": obj.duration_seconds * 1000,
+        "prompt_influence": settings.prompt_influence,
+        "force_instrumental": True,
+    }
+
+    async with httpx.AsyncClient() as client:
+        plan_resp = await client.post(
+            plan_url, json=plan_payload, headers=headers, timeout=60.0,
+        )
+        if plan_resp.status_code != 200:
+            logger.error("ElevenLabs plan error %d: %s", plan_resp.status_code, plan_resp.text[:500])
+            raise RuntimeError(f"Audio plan failed: {plan_resp.status_code}")
+
+        plan_data = plan_resp.json()
+        logger.debug("Composition plan: %s", plan_data)
+
+        # Step 2 — generate audio from the plan
+        gen_url = f"{ELEVENLABS_BASE}/music"
+        gen_payload = {
+            "composition_plan": plan_data,
+            "output_format": "mp3",
         }
 
-    async with httpx.AsyncClient(timeout=120.0) as client:
-        response = await client.post(url, json=payload, headers=headers)
-        if response.status_code != 200:
-            logger.error("ElevenLabs error %d: %s", response.status_code, response.text[:500])
-            raise RuntimeError(f"Audio generation failed: {response.status_code}")
-        filepath.write_bytes(response.content)
+        gen_resp = await client.post(
+            gen_url, json=gen_payload, headers=headers, timeout=120.0,
+        )
+        if gen_resp.status_code != 200:
+            logger.error("ElevenLabs generate error %d: %s", gen_resp.status_code, gen_resp.text[:500])
+            raise RuntimeError(f"Audio generation failed: {gen_resp.status_code}")
+
+        filepath.write_bytes(gen_resp.content)
 
     return filename

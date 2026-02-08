@@ -4,3 +4,7 @@ __pycache__/
 backend/audio_files/*.mp3
 .venv/
 venv/
+*.db
+*.db-shm
+*.db-wal
+.DS_Store
