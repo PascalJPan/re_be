@@ -1,0 +1,177 @@
+================================================================================
+  PIPELINE TRACE — RECREATE
+  ID: c64b9bf7ee79  |  User: pascal  |  2026-02-08T11:23:10.708786
+================================================================================
+
+================================================================================
+ STEP 1: COLOR DERIVATION
+================================================================================
+
+Input hex: #00ffb3
+
+{
+  "hex": "#00ffb3",
+  "hue_category": "cool_cyan",
+  "saturation": 1.0,
+  "lightness": 0.5
+}
+
+================================================================================
+ STEP 2: IMAGE ANALYSIS (OpenAI Vision → gpt-5.2)
+================================================================================
+
+Input: user-uploaded image (binary)
+
+Output (ImageAnalysis):
+{
+  "scene_description": "A close, studio-lit portrait of a man mid-conversation, hands lifted as if shaping an idea in the air. Cool cyan light skims his face and sweater, while the background falls into a deep, velvety blue gradient that feels like a quiet stage with soft depth and no visible edges.",
+  "detected_objects": [
+    "person",
+    "dark hair",
+    "crewneck sweater (knit fabric)",
+    "clip-on lavalier microphone",
+    "hands in gesturing pose",
+    "blurred foreground paper or card",
+    "studio backdrop (blue gradient)"
+  ],
+  "vibe": "cool-toned, velvety-studio hush, electric-cyan clarity, softly pressurized intimacy",
+  "emotion": "focused concern threaded with cautious explanation",
+  "dominant_colors": [
+    "deep midnight blue",
+    "teal-cyan wash",
+    "cool slate green",
+    "soft steel gray",
+    "near-black shadow"
+  ],
+  "environment": "indoor",
+  "time_of_day": "null",
+  "location_hint": "A studio interview or panel setup with controlled lighting and a seamless backdrop",
+  "ambient_sound_associations": [
+    "soft fabric rustle from sleeves as hands move",
+    "a lavalier mic cable faintly tapping against the sweater",
+    "quiet inhale before speaking",
+    "low room-tone hum from studio lights or HVAC",
+    "paper edge sliding or lightly flicking in the foreground",
+    "a muted chair creak under a small shift in posture",
+    "distant, subdued murmurs from off-camera crew"
+  ],
+  "sonic_metaphor": "A thin, steady synth pad under a careful voice\u2014like a question held in the air, vibrating just before it becomes an answer."
+}
+
+================================================================================
+ STEP 3: SQUIGGLE FEATURE EXTRACTION
+================================================================================
+
+Output (SquiggleFeatures):
+{
+  "total_length": 1.329732,
+  "bounding_box_area": 0.30496,
+  "average_speed": 0.001449,
+  "speed_variance": 3e-06,
+  "point_count": 57
+}
+
+================================================================================
+ STEP 4: IMAGE ENHANCEMENT PROMPT (OpenAI → gpt-5.2)
+================================================================================
+
+Input: ImageAnalysis + ColorInput + SquiggleFeatures
+
+Output (ImageEnhancementPrompt):
+{
+  "emotional_intent": "Transform the calm, focused portrait into a surreal, glitch-infused digital reverie that disorients and engages the viewer's perception.",
+  "visual_directive": "Dissolve the image into a fractured cyber-noir mosaic with chromatic aberration, pixel glitches, and distorted geometric shards.",
+  "morphing_prompt": "Create a striking collage of the portrait rendered as a chaotic, glitch-stained digital mosaic. Incorporate harsh, jagged fragments, vibrant neon cyan and midnight blue distortions, and layered pixel noise. Add faint double exposure textures and neon grid overlays to evoke a hyper-modern, dystopian aesthetic, while keeping the subject's face and hands recognizable amid the fragmentation.",
+  "style_reference": "Cyberpunk manga panel"
+}
+
+================================================================================
+ STEP 5: IMAGE MORPHING (OpenAI → gpt-image-1)
+================================================================================
+
+Input image: original + color overlay (Pillow)
+Prompt sent to gpt-image-1:
+
+  "Create a striking collage of the portrait rendered as a chaotic, glitch-stained digital mosaic. Incorporate harsh, jagged fragments, vibrant neon cyan and midnight blue distortions, and layered pixel noise. Add faint double exposure textures and neon grid overlays to evoke a hyper-modern, dystopian aesthetic, while keeping the subject's face and hands recognizable amid the fragmentation."
+
+Output: morphed image bytes (stored as post image) — SUCCESS
+
+================================================================================
+ STEP 6: AUDIO STRUCTURED OBJECT (OpenAI → gpt-5.2)
+================================================================================
+
+Input: ImageAnalysis + ColorInput + SquiggleFeatures
+
+Output (AudioStructuredObject):
+{
+  "audio_type": "ambient",
+  "mood": {
+    "primary": "focused",
+    "secondary": "intimate"
+  },
+  "energy": 0.35,
+  "tempo": "slow",
+  "density": "medium",
+  "texture": [
+    "smooth",
+    "minimal",
+    "velvety"
+  ],
+  "sound_references": [
+    "studio ambiance",
+    "soft fabric rustle",
+    "faint mic cable tap",
+    "low hum",
+    "subdued murmurs"
+  ],
+  "duration_seconds": 18,
+  "bpm": 90,
+  "musical_key": "E minor",
+  "relation_to_parent": "original",
+  "confidence": 0.85,
+  "instruments": [
+    "digital pad",
+    "subtle field recordings"
+  ],
+  "genre_hint": "ambient",
+  "harmonic_mood": "suspending",
+  "dynamic_shape": "slow and steady with gentle fluctuations",
+  "sonic_palette": "cool, digital, muted textures"
+}
+
+================================================================================
+ STEP 7: COMPILED PROMPT (deterministic logic)
+================================================================================
+
+Input: AudioStructuredObject + ColorInput + ImageAnalysis + SquiggleFeatures
+
+Output (prompt string sent to ElevenLabs):
+
+  "Instrumental ambient track. Genre: ambient. Scene: A close, studio-lit portrait of a man mid-conversation, hands lifted as if shaping an idea in the air. Cool cyan light skims his face and sweater, while the background falls into a deep, velvety blue gradient that feels like a quiet stage with soft depth and no visible edges.. Vibe: cool-toned, velvety-studio hush, electric-cyan clarity, softly pressurized intimacy. Setting: null indoor. Sounds like: A thin, steady synth pad under a careful voice—like a question held in the air, vibrating just before it becomes an answer.. Building momentum, focused and intimate mood with a crisp and spacious, vivid tonal palette, smooth, minimal, velvety textures, and flowing, melodic phrases. Instruments: digital pad, subtle field recordings. Timbre: cool, digital, muted textures. Harmonic feel: suspending. Dynamic shape: slow and steady with gentle fluctuations. Drawing from: studio ambiance, soft fabric rustle, faint mic cable tap, low hum, subdued murmurs. Make it musically engaging with clear rhythm and forward momentum. 90 BPM, in E minor, slow tempo, medium density, 18 seconds long. Instrumental only, no vocals, no lyrics."
+
+================================================================================
+ STEP 8: ELEVENLABS COMPOSITION PLAN (/v1/music/plan)
+================================================================================
+
+Request payload:
+{
+  "prompt": "Instrumental ambient track. Genre: ambient. Scene: A close, studio-lit portrait of a man mid-conversation, hands lifted as if shaping an idea in the air. Cool cyan light skims his face and sweater, while the background falls into a deep, velvety blue gradient that feels like a quiet stage with soft depth and no visible edges.. Vibe: cool-toned, velvety-studio hush, electric-cyan clarity, softly pressurized intimacy. Setting: null indoor. Sounds like: A thin, steady synth pad under a careful voice\u2014like a question held in the air, vibrating just before it becomes an answer.. Building momentum, focused and intimate mood with a crisp and spacious, vivid tonal palette, smooth, minimal, velvety textures, and flowing, melodic phrases. Instruments: digital pad, subtle field recordings. Timbre: cool, digital, muted textures. Harmonic feel: suspending. Dynamic shape: slow and steady with gentle fluctuations. Drawing from: studio ambiance, soft fabric rustle, faint mic cable tap, low hum, subdued murmurs. Make it musically engaging with clear rhythm and forward momentum. 90 BPM, in E minor, slow tempo, medium density, 18 seconds long. Instrumental only, no vocals, no lyrics.",
+  "music_length_ms": 18000,
+  "prompt_influence": 0.85,
+  "force_instrumental": true
+}
+
+Response: composition_plan JSON (opaque, passed to next step)
+
+================================================================================
+ STEP 9: ELEVENLABS AUDIO GENERATION (/v1/music)
+================================================================================
+
+Request: { composition_plan: <from previous step>, output_format: "mp3" }
+
+Output: c64b9bf7ee79.mp3
+Saved to: backend/audio_files/c64b9bf7ee79.mp3
+
+================================================================================
+  TRACE COMPLETE — c64b9bf7ee79.mp3
+================================================================================

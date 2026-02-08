@@ -105,11 +105,12 @@ function tickLoop() {
 
   const pos = getClockPosition();
   const progress = sync.duration > 0 ? pos / sync.duration : 0;
+  const time = performance.now() / 1000;
 
   sync.players.forEach(p => {
     if (!p.peaks) return;
     const ctx = p.canvas.getContext('2d');
-    drawWaveform(ctx, p.peaks, p.active ? progress : 0, p.color, p.height, p.active);
+    drawWaveform(ctx, p.peaks, p.active ? progress : 0, p.color, p.height, p.active, time);
 
     // Drift correction for active players
     if (p.active && p.audio.duration) {
@@ -140,18 +141,19 @@ function computePeaks(audioBuffer, count) {
   return peaks;
 }
 
-function drawWaveform(ctx, peaks, progress, color, height, active = true) {
+function drawWaveform(ctx, peaks, progress, color, height, active = true, time = 0) {
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
   const total = peaks.length;
   const progressIndex = Math.floor(progress * total);
   for (let i = 0; i < total; i++) {
+    const pulse = 1 + 0.15 * Math.sin(time * 2 + i * 0.3);
     const x = i * (BAR_WIDTH + BAR_GAP);
-    const barH = Math.max(2, peaks[i] * (height - 4));
+    const barH = Math.max(2, peaks[i] * (height - 4) * pulse);
     const y = (height - barH) / 2;
     if (active && i < progressIndex) {
       ctx.fillStyle = color;
     } else {
-      ctx.fillStyle = active ? color + '4D' : color + '30';
+      ctx.fillStyle = active ? color + '80' : color + '4D';
     }
     ctx.beginPath();
     ctx.roundRect(x, y, BAR_WIDTH, barH, 1.5);
@@ -199,6 +201,7 @@ export function createPlayer(audioUrl, container, color = '#ff4444', opts = {}) 
       if (useSync && sync.players.has(playerId)) {
         sync.players.get(playerId).peaks = peaks;
       }
+      if (!useSync && audio._startIdle) audio._startIdle();
     })
     .catch(err => {
       if (err.name === 'AbortError') return;
@@ -208,6 +211,7 @@ export function createPlayer(audioUrl, container, color = '#ff4444', opts = {}) 
       if (useSync && sync.players.has(playerId)) {
         sync.players.get(playerId).peaks = peaks;
       }
+      if (!useSync && audio._startIdle) audio._startIdle();
     });
 
   if (useSync && sync.enabled) {
@@ -215,6 +219,8 @@ export function createPlayer(audioUrl, container, color = '#ff4444', opts = {}) 
     sync.players.set(playerId, {
       audio, peaks, canvas, color, height, active: false, ac,
     });
+    // Start tick loop for idle pulse even if no player is active yet
+    if (!sync.animFrameId) tickLoop();
 
     // Looping via ended event
     audio.addEventListener('ended', () => {
@@ -233,6 +239,26 @@ export function createPlayer(audioUrl, container, color = '#ff4444', opts = {}) 
     let animId = null;
     let waitFrames = 0;
     const MAX_WAIT_FRAMES = 300; // ~5 seconds at 60fps
+    let idleId = null;
+    let idleRunning = false;
+
+    function idleTick() {
+      if (!peaks || simpleActive) { idleId = null; idleRunning = false; return; }
+      const time = performance.now() / 1000;
+      drawWaveform(canvas.getContext('2d'), peaks, 0, color, height, false, time);
+      idleId = requestAnimationFrame(idleTick);
+    }
+
+    function startIdle() {
+      if (idleRunning || simpleActive) return;
+      idleRunning = true;
+      idleTick();
+    }
+
+    function stopIdle() {
+      if (idleId) { cancelAnimationFrame(idleId); idleId = null; }
+      idleRunning = false;
+    }
 
     function simpleTick() {
       if (!peaks || !audio.duration) {
@@ -246,7 +272,8 @@ export function createPlayer(audioUrl, container, color = '#ff4444', opts = {}) 
       }
       waitFrames = 0;
       const progress = audio.currentTime / audio.duration;
-      drawWaveform(canvas.getContext('2d'), peaks, progress, color, height, true);
+      const time = performance.now() / 1000;
+      drawWaveform(canvas.getContext('2d'), peaks, progress, color, height, true, time);
       if (!audio.paused) {
         animId = requestAnimationFrame(simpleTick);
       } else {
@@ -255,6 +282,7 @@ export function createPlayer(audioUrl, container, color = '#ff4444', opts = {}) 
     }
 
     audio.addEventListener('play', () => {
+      stopIdle();
       if (!simpleActive) {
         simpleActive = true;
         waitFrames = 0;
@@ -265,6 +293,7 @@ export function createPlayer(audioUrl, container, color = '#ff4444', opts = {}) 
     if (!opts.noClick) {
       canvas.addEventListener('click', () => {
         if (audio.paused) {
+          stopIdle();
           simpleActive = true;
           waitFrames = 0;
           safePlay(audio);
@@ -272,14 +301,14 @@ export function createPlayer(audioUrl, container, color = '#ff4444', opts = {}) 
         } else {
           audio.pause();
           simpleActive = false;
-          if (peaks) drawWaveform(canvas.getContext('2d'), peaks, 0, color, height, false);
+          startIdle();
         }
       }, { signal });
     }
 
     audio.addEventListener('ended', () => {
       simpleActive = false;
-      if (peaks) drawWaveform(canvas.getContext('2d'), peaks, 0, color, height, false);
+      startIdle();
     }, { signal });
 
     audio.addEventListener('pause', () => {
@@ -289,6 +318,7 @@ export function createPlayer(audioUrl, container, color = '#ff4444', opts = {}) 
     // External control for feed autoplay
     audio.feedPlay = () => {
       if (audio.paused) {
+        stopIdle();
         simpleActive = true;
         waitFrames = 0;
         safePlay(audio);
@@ -301,8 +331,11 @@ export function createPlayer(audioUrl, container, color = '#ff4444', opts = {}) 
       audio.currentTime = 0;
       simpleActive = false;
       if (animId) { cancelAnimationFrame(animId); animId = null; }
-      if (peaks) drawWaveform(canvas.getContext('2d'), peaks, 0, color, height, false);
+      startIdle();
     };
+
+    // Start idle pulse once peaks are ready (handled in fetch callback below)
+    audio._startIdle = startIdle;
   }
 
   // Store AbortController on audio element for clearPlayers()

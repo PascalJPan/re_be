@@ -85,8 +85,22 @@ async def init_db():
     except aiosqlite.OperationalError:
         pass  # Column already exists
 
-    # Recover from server restart mid-generation: mark stale generating posts as failed
+    # Migrate comments: add status + error_message columns
+    try:
+        await _db.execute("ALTER TABLE comments ADD COLUMN status TEXT NOT NULL DEFAULT 'ready'")
+        await _db.commit()
+    except aiosqlite.OperationalError:
+        pass  # Column already exists
+
+    try:
+        await _db.execute("ALTER TABLE comments ADD COLUMN error_message TEXT DEFAULT ''")
+        await _db.commit()
+    except aiosqlite.OperationalError:
+        pass  # Column already exists
+
+    # Recover from server restart mid-generation: mark stale generating posts/comments as failed
     await _db.execute("UPDATE posts SET status = 'failed', error_message = 'Server restarted during generation' WHERE status = 'generating'")
+    await _db.execute("UPDATE comments SET status = 'failed', error_message = 'Server restarted during generation' WHERE status = 'generating'")
     await _db.commit()
 
     await _db.execute(

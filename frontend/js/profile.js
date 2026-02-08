@@ -1,8 +1,8 @@
 import * as api from './api.js';
-import { getUser } from './auth.js';
+import { getUser, isAdmin } from './auth.js';
 import { navigate } from './router.js';
 import { timeAgo, toast } from './ui.js';
-import { addGeneratingPost, onStatusChange } from './generation-tracker.js';
+import { addGeneratingPost, onStatusChange, offStatusChange } from './generation-tracker.js';
 
 let activeCloseHandler = null;
 let statusUnsub = null;
@@ -20,7 +20,7 @@ export function render(container, username) {
 
   // Cleanup: remove any open menus and their document-level click listeners
   return () => {
-    statusUnsub = null;
+    if (statusUnsub) { offStatusChange(statusUnsub); statusUnsub = null; }
     if (activeCloseHandler) {
       document.removeEventListener('click', activeCloseHandler);
       activeCloseHandler = null;
@@ -53,7 +53,7 @@ async function loadProfile(container, username, page) {
       return;
     }
 
-    const isOwnProfile = getUser().username === data.user.username;
+    const isOwnProfile = isAdmin() && getUser().username === data.user.username;
 
     const grid = document.createElement('div');
     grid.className = 'profile-grid';

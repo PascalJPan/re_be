@@ -1,6 +1,6 @@
 import math
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Query
 
 from backend.database import get_db
 from backend.models.schemas import PostSummary, ProfileResponse, UserPublic
@@ -17,7 +17,13 @@ async def get_profile(username: str, page: int = Query(1, ge=1), per_page: int =
         (username,),
     )
     if not user_rows:
-        raise HTTPException(status_code=404, detail="User not found")
+        return ProfileResponse(
+            user=UserPublic(id=0, username=username),
+            posts=[],
+            total=0,
+            page=page,
+            pages=1,
+        )
 
     user_id, actual_username = user_rows[0]
     offset = (page - 1) * per_page

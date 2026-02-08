@@ -4,7 +4,7 @@ import { safePlay } from './audio-player.js';
 import { sampleColor } from './pixel-sampler.js';
 import { toast } from './ui.js';
 import { navigate } from './router.js';
-import { addGeneratingPost } from './generation-tracker.js';
+import { addGeneratingPost, addGeneratingComment } from './generation-tracker.js';
 
 const MAX_DIMENSION = 1024;
 
@@ -136,29 +136,14 @@ async function autoSubmit(onDone) {
   submitting = true;
 
   if (commentPostId) {
-    // Comments stay synchronous — need parent's structured_object
-    overlay.querySelector('.create-loading').style.display = '';
-    overlay.querySelector('.create-bottom-bar').style.display = 'none';
-
+    // Comments are async — close overlay immediately
     try {
       const data = await api.createComment(commentPostId, currentFile, derivedColor, points);
-      const item = data.comment;
-
-      console.groupCollapsed(`[Generation] ${item.id}`);
-      console.log('image_analysis:', item.image_analysis);
-      console.log('squiggle_features:', item.squiggle_features);
-      console.log('structured_object:', item.structured_object);
-      console.log('compiled_prompt:', item.compiled_prompt);
-      console.groupEnd();
-
+      addGeneratingComment(data.id, commentPostId, data.color_hex);
       closeOverlay();
-      if (onDone) onDone(item.id);
+      if (onDone) onDone(data.id, 'generating');
     } catch (e) {
       submitting = false;
-      if (overlay) {
-        overlay.querySelector('.create-loading').style.display = 'none';
-        overlay.querySelector('.create-bottom-bar').style.display = '';
-      }
       toast(e.message, true);
     }
   } else {

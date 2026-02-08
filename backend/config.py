@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     prompt_influence: float = 0.85
     max_image_size_mb: int = 10
     jwt_secret: str = "change-me-in-production"
+    admin_passcode: str = "00000"
     database_path: str = "re.db"
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}

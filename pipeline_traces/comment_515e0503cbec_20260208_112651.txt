@@ -1,0 +1,202 @@
+================================================================================
+  PIPELINE TRACE — COMMENT
+  ID: 515e0503cbec  |  User: pascal  |  2026-02-08T11:26:51.488750
+================================================================================
+
+================================================================================
+ STEP 1: COLOR DERIVATION
+================================================================================
+
+Input hex: #fb8d04
+
+{
+  "hex": "#fb8d04",
+  "hue_category": "warm_orange",
+  "saturation": 0.969,
+  "lightness": 0.5
+}
+
+================================================================================
+ STEP 2: IMAGE ANALYSIS (OpenAI Vision → gpt-5.2)
+================================================================================
+
+Input: user-uploaded image (binary)
+
+Output (ImageAnalysis):
+{
+  "scene_description": "An extreme close-up selfie fills the frame with a face caught mid-gasp, eyes wide and mouth open, as if a sudden realization hit like a flashbulb. Cool, flat overhead office lighting bounces off pale walls and a grid ceiling, compressing the space into a shallow, claustrophobic depth where the background dissolves into fluorescent hush.",
+  "detected_objects": [
+    "human face",
+    "wide-open eyes",
+    "open mouth",
+    "short tousled hair",
+    "light facial hair",
+    "black T-shirt fabric",
+    "drop-ceiling grid",
+    "fluorescent ceiling light panels",
+    "pale wall",
+    "window or reflective surface"
+  ],
+  "vibe": "fluorescent-stung immediacy, close-quarters claustrophobia, jittery high-contrast alertness, dry office-air sterility",
+  "emotion": "startled disbelief with a spike of comedic panic",
+  "dominant_colors": [
+    "cool off-white ceiling",
+    "pale beige wall",
+    "charcoal black shirt",
+    "ashy brown hair",
+    "pinkish skin tones",
+    "steel-gray shadows"
+  ],
+  "environment": "indoor",
+  "time_of_day": "null",
+  "location_hint": "an office-like room with a drop ceiling and fluorescent panels",
+  "ambient_sound_associations": [
+    "fluorescent light ballast buzz",
+    "air-conditioning vent hiss",
+    "faint computer fan whir",
+    "a chair\u2019s plastic creak",
+    "distant muffled hallway footsteps",
+    "a soft phone vibration rattle on a desk",
+    "dry swallow and quick inhale close to the mic"
+  ],
+  "sonic_metaphor": "A sudden inhale that snaps into fluorescent buzz\u2014like a jump-cut in a quiet office where the air itself clicks to attention."
+}
+
+================================================================================
+ STEP 3: SQUIGGLE FEATURE EXTRACTION
+================================================================================
+
+Output (SquiggleFeatures):
+{
+  "total_length": 0.000277,
+  "bounding_box_area": 0.0,
+  "average_speed": 0.000277,
+  "speed_variance": 0.0,
+  "point_count": 2
+}
+
+================================================================================
+ PARENT POST AUDIO OBJECT (inherited bpm/key/duration)
+================================================================================
+
+{
+  "audio_type": "music",
+  "mood": {
+    "primary": "restless",
+    "secondary": "fatigued"
+  },
+  "energy": 0.28,
+  "tempo": "slow",
+  "density": "sparse",
+  "texture": [
+    "thin fluorescent buzz layer",
+    "soft pulsing sub",
+    "minimal click-percussion",
+    "hushed, looping pad"
+  ],
+  "sound_references": [
+    "overhead fluorescent light buzz",
+    "laptop fan whir",
+    "aluminum can tick/tap",
+    "cable rub across tabletop",
+    "distant muffled hallway footsteps"
+  ],
+  "duration_seconds": 15,
+  "bpm": 74,
+  "musical_key": "D minor",
+  "relation_to_parent": "original",
+  "confidence": 0.78,
+  "instruments": [
+    "glassy FM electric piano",
+    "soft analog synth pad",
+    "sub bass sine",
+    "tight rim-click percussion"
+  ],
+  "genre_hint": "minimal downtempo",
+  "harmonic_mood": "suspended and slightly anxious",
+  "dynamic_shape": "steady loop with a faint swell midway, then a gentle fade",
+  "sonic_palette": "cool violet-tinted digital haze with subtle metallic transients, clean and slightly sterile"
+}
+
+================================================================================
+ STEP 4: AUDIO STRUCTURED OBJECT (OpenAI → gpt-5.2)
+================================================================================
+
+Input: ImageAnalysis + ColorInput + SquiggleFeatures + parent AudioStructuredObject
+
+Output (AudioStructuredObject):
+{
+  "audio_type": "ambient",
+  "mood": {
+    "primary": "restless",
+    "secondary": "fatigued"
+  },
+  "energy": 0.35,
+  "tempo": "slow",
+  "density": "sparse",
+  "texture": [
+    "thin fluorescent buzz layer",
+    "soft pulsing sub",
+    "minimal click-percussion",
+    "hushed, looping pad"
+  ],
+  "sound_references": [
+    "overhead fluorescent light buzz",
+    "laptop fan whir",
+    "aluminum can tick/tap",
+    "cable rub across tabletop",
+    "distant muffled hallway footsteps"
+  ],
+  "duration_seconds": 15,
+  "bpm": 74,
+  "musical_key": "D minor",
+  "relation_to_parent": "contrast",
+  "confidence": 0.85,
+  "instruments": [
+    "glassy FM electric piano",
+    "soft analog synth pad",
+    "sub bass sine",
+    "tight rim-click percussion"
+  ],
+  "genre_hint": "minimal downtempo",
+  "harmonic_mood": "suspended and slightly anxious",
+  "dynamic_shape": "steady loop with a faint swell midway, then a gentle fade",
+  "sonic_palette": "cool violet-tinted digital haze with subtle metallic transients, clean and slightly sterile"
+}
+
+================================================================================
+ STEP 5: COMPILED PROMPT (deterministic logic)
+================================================================================
+
+Input: AudioStructuredObject + ColorInput + ImageAnalysis + SquiggleFeatures
+
+Output (prompt string sent to ElevenLabs):
+
+  "Instrumental ambient track. Genre: minimal downtempo. Scene: An extreme close-up selfie fills the frame with a face caught mid-gasp, eyes wide and mouth open, as if a sudden realization hit like a flashbulb. Cool, flat overhead office lighting bounces off pale walls and a grid ceiling, compressing the space into a shallow, claustrophobic depth where the background dissolves into fluorescent hush.. Vibe: fluorescent-stung immediacy, close-quarters claustrophobia, jittery high-contrast alertness, dry office-air sterility. Setting: null indoor. Sounds like: A sudden inhale that snaps into fluorescent buzz—like a jump-cut in a quiet office where the air itself clicks to attention.. Building momentum, restless and fatigued mood with a warm and earthy, vivid tonal palette, thin fluorescent buzz layer, soft pulsing sub, minimal click-percussion, hushed, looping pad textures, and sustained pads and slow drones with focused simplicity. Instruments: glassy FM electric piano, soft analog synth pad, sub bass sine, tight rim-click percussion. Timbre: cool violet-tinted digital haze with subtle metallic transients, clean and slightly sterile. Harmonic feel: suspended and slightly anxious. Dynamic shape: steady loop with a faint swell midway, then a gentle fade. Drawing from: overhead fluorescent light buzz, laptop fan whir, aluminum can tick/tap, cable rub across tabletop, distant muffled hallway footsteps. Make it musically engaging with clear rhythm and forward momentum. 74 BPM, in D minor, slow tempo, sparse density, 15 seconds long. Instrumental only, no vocals, no lyrics."
+
+================================================================================
+ STEP 6: ELEVENLABS COMPOSITION PLAN (/v1/music/plan)
+================================================================================
+
+Request payload:
+{
+  "prompt": "Instrumental ambient track. Genre: minimal downtempo. Scene: An extreme close-up selfie fills the frame with a face caught mid-gasp, eyes wide and mouth open, as if a sudden realization hit like a flashbulb. Cool, flat overhead office lighting bounces off pale walls and a grid ceiling, compressing the space into a shallow, claustrophobic depth where the background dissolves into fluorescent hush.. Vibe: fluorescent-stung immediacy, close-quarters claustrophobia, jittery high-contrast alertness, dry office-air sterility. Setting: null indoor. Sounds like: A sudden inhale that snaps into fluorescent buzz\u2014like a jump-cut in a quiet office where the air itself clicks to attention.. Building momentum, restless and fatigued mood with a warm and earthy, vivid tonal palette, thin fluorescent buzz layer, soft pulsing sub, minimal click-percussion, hushed, looping pad textures, and sustained pads and slow drones with focused simplicity. Instruments: glassy FM electric piano, soft analog synth pad, sub bass sine, tight rim-click percussion. Timbre: cool violet-tinted digital haze with subtle metallic transients, clean and slightly sterile. Harmonic feel: suspended and slightly anxious. Dynamic shape: steady loop with a faint swell midway, then a gentle fade. Drawing from: overhead fluorescent light buzz, laptop fan whir, aluminum can tick/tap, cable rub across tabletop, distant muffled hallway footsteps. Make it musically engaging with clear rhythm and forward momentum. 74 BPM, in D minor, slow tempo, sparse density, 15 seconds long. Instrumental only, no vocals, no lyrics.",
+  "music_length_ms": 15000,
+  "prompt_influence": 0.85,
+  "force_instrumental": true
+}
+
+Response: composition_plan JSON (opaque, passed to next step)
+
+================================================================================
+ STEP 7: ELEVENLABS AUDIO GENERATION (/v1/music)
+================================================================================
+
+Request: { composition_plan: <from previous step>, output_format: "mp3" }
+
+Output: 515e0503cbec.mp3
+Saved to: backend/audio_files/515e0503cbec.mp3
+
+================================================================================
+  TRACE COMPLETE — 515e0503cbec.mp3
+================================================================================

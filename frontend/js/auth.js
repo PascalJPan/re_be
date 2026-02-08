@@ -1,13 +1,27 @@
-const DEMO_USER = { id: 1, username: 'pascal' };
+let _username = null;
+let _admin = false;
+
+export function getUser() {
+  if (!_username) return null;
+  return { id: null, username: _username };
+}
+
+export function setUser(username) {
+  _username = username;
+}
 
 export function getToken() {
   return null;
 }
 
-export function getUser() {
-  return DEMO_USER;
+export function isLoggedIn() {
+  return !!_username;
 }
 
-export function isLoggedIn() {
-  return true;
+export function setAdmin(val) {
+  _admin = !!val;
+}
+
+export function isAdmin() {
+  return _admin;
 }

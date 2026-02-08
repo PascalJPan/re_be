@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 import uuid
@@ -11,8 +12,9 @@ from backend.database import get_db
 from backend.models.schemas import (
     AudioStructuredObject,
     ColorInput,
-    CommentCreateResponse,
+    CommentCreateAsyncResponse,
     CommentDetail,
+    CommentStatusResponse,
     ImageAnalysis,
     SquiggleFeatures,
     SquigglePoint,
@@ -31,7 +33,85 @@ router = APIRouter(tags=["comments"])
 AUDIO_DIR = Path(__file__).resolve().parent.parent / "audio_files"
 
 
-@router.post("/api/posts/{post_id}/comments", response_model=CommentCreateResponse)
+async def run_comment_pipeline(comment_id: str, post_id: str, image_bytes: bytes,
+                                content_type: str, raw_points: list, color_hex: str,
+                                username: str, parent_object: AudioStructuredObject):
+    """Background task: runs the full AI pipeline for a comment and updates the row on completion."""
+    try:
+        points = [SquigglePoint(**p) for p in raw_points]
+        color = ColorInput.from_hex(color_hex)
+
+        image_analysis = await analyze_image(image_bytes, content_type)
+        squiggle_features = extract_features(points)
+        structured_object = await generate_audio_object(
+            image_analysis, color, squiggle_features, parent=parent_object
+        )
+        prompt_text = compile_prompt(structured_object, color, image_analysis, squiggle_features)
+        audio_filename = await generate_audio(comment_id, prompt_text, structured_object)
+
+        db = get_db()
+        await db.execute(
+            """UPDATE comments SET
+               structured_object = ?, image_analysis = ?, squiggle_features = ?,
+               compiled_prompt = ?, audio_filename = ?, status = 'ready'
+               WHERE id = ?""",
+            (
+                structured_object.model_dump_json(),
+                image_analysis.model_dump_json(),
+                squiggle_features.model_dump_json(),
+                prompt_text,
+                audio_filename,
+                comment_id,
+            ),
+        )
+        await db.commit()
+
+        try:
+            trace_path = write_trace(
+                trace_type="comment",
+                item_id=comment_id,
+                username=username,
+                color_hex=color_hex,
+                color=color,
+                image_analysis=image_analysis,
+                squiggle_features=squiggle_features,
+                structured_object=structured_object,
+                compiled_prompt=prompt_text,
+                audio_filename=audio_filename,
+                parent_object=parent_object,
+            )
+            logger.info("Pipeline trace saved: %s", trace_path)
+        except Exception as e:
+            logger.warning("Failed to write pipeline trace: %s", e)
+
+        logger.info("Comment %s generation complete", comment_id)
+
+    except Exception as e:
+        logger.error("Comment %s generation failed: %s", comment_id, e)
+        try:
+            db = get_db()
+            await db.execute(
+                "UPDATE comments SET status = 'failed', error_message = ? WHERE id = ?",
+                (str(e), comment_id),
+            )
+            await db.commit()
+        except Exception:
+            logger.error("Failed to mark comment %s as failed", comment_id)
+
+
+@router.get("/api/comments/{comment_id}/status", response_model=CommentStatusResponse)
+async def get_comment_status(comment_id: str):
+    db = get_db()
+    rows = await db.execute_fetchall(
+        "SELECT id, status, error_message FROM comments WHERE id = ?", (comment_id,)
+    )
+    if not rows:
+        raise HTTPException(status_code=404, detail="Comment not found")
+    r = rows[0]
+    return CommentStatusResponse(id=r[0], status=r[1], error_message=r[2] or "")
+
+
+@router.post("/api/posts/{post_id}/comments", response_model=CommentCreateAsyncResponse)
 async def create_comment(
     post_id: str,
     image: UploadFile = File(...),
@@ -68,36 +148,19 @@ async def create_comment(
         raise HTTPException(status_code=422, detail="Too few squiggle points (need at least 2)")
 
     try:
-        color = ColorInput.from_hex(color_hex)
+        ColorInput.from_hex(color_hex)
     except Exception:
         raise HTTPException(status_code=422, detail="Invalid color_hex")
 
-    try:
-        image_analysis = await analyze_image(image_bytes, image.content_type or "image/jpeg")
-    except Exception as e:
-        raise HTTPException(status_code=502, detail=f"Image analysis failed: {e}")
-
-    squiggle_features = extract_features(points)
-
-    try:
-        structured_object = await generate_audio_object(
-            image_analysis, color, squiggle_features, parent=parent_object
-        )
-    except Exception as e:
-        raise HTTPException(status_code=502, detail=f"Unexpected format: {e}")
-
-    prompt_text = compile_prompt(structured_object, color, image_analysis, squiggle_features)
     comment_id = uuid.uuid4().hex[:12]
+    content_type = image.content_type or "image/jpeg"
 
-    try:
-        audio_filename = await generate_audio(comment_id, prompt_text, structured_object)
-    except Exception as e:
-        raise HTTPException(status_code=502, detail=f"Audio generation failed: {e}")
-
+    # Insert placeholder row with status='generating'
     await db.execute(
         """INSERT INTO comments (id, post_id, user_id, image_data, squiggle_points, color_hex,
-           structured_object, image_analysis, squiggle_features, compiled_prompt, audio_filename)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+           structured_object, image_analysis, squiggle_features, compiled_prompt,
+           audio_filename, status)
+           VALUES (?, ?, ?, ?, ?, ?, '{}', '{}', '{}', '', '', 'generating')""",
         (
             comment_id,
             post_id,
@@ -105,50 +168,29 @@ async def create_comment(
             image_bytes,
             json.dumps(raw_points),
             color_hex,
-            structured_object.model_dump_json(),
-            image_analysis.model_dump_json(),
-            squiggle_features.model_dump_json(),
-            prompt_text,
-            audio_filename,
         ),
     )
     await db.commit()
 
-    try:
-        trace_path = write_trace(
-            trace_type="comment",
-            item_id=comment_id,
-            username=user["username"],
-            color_hex=color_hex,
-            color=color,
-            image_analysis=image_analysis,
-            squiggle_features=squiggle_features,
-            structured_object=structured_object,
-            compiled_prompt=prompt_text,
-            audio_filename=audio_filename,
-            parent_object=parent_object,
-        )
-        logger.info("Pipeline trace saved: %s", trace_path)
-    except Exception as e:
-        logger.warning("Failed to write pipeline trace: %s", e)
-
     row = await db.execute_fetchall(
         "SELECT created_at FROM comments WHERE id = ?", (comment_id,)
     )
-    created_at = row[0][0] if row else None
+    created_at = row[0][0] if row else ""
 
-    return CommentCreateResponse(
-        comment=CommentDetail(
-            id=comment_id,
-            username=user["username"],
-            audio_url=f"api/audio/{audio_filename}",
-            color_hex=color_hex,
-            structured_object=structured_object,
-            image_analysis=image_analysis,
-            squiggle_features=squiggle_features,
-            compiled_prompt=prompt_text,
-            created_at=created_at,
+    # Launch background pipeline
+    asyncio.create_task(
+        run_comment_pipeline(
+            comment_id, post_id, image_bytes, content_type,
+            raw_points, color_hex, user["username"], parent_object,
         )
+    )
+
+    return CommentCreateAsyncResponse(
+        id=comment_id,
+        post_id=post_id,
+        status="generating",
+        color_hex=color_hex,
+        created_at=created_at,
     )
 
 
@@ -165,7 +207,7 @@ async def list_comments(post_id: str):
     rows = await db.execute_fetchall(
         """SELECT c.id, u.username, c.audio_filename, c.color_hex,
            c.structured_object, c.image_analysis, c.squiggle_features,
-           c.compiled_prompt, c.created_at
+           c.compiled_prompt, c.created_at, c.status
            FROM comments c JOIN users u ON c.user_id = u.id
            WHERE c.post_id = ?
            ORDER BY c.created_at ASC""",
@@ -178,20 +220,32 @@ async def list_comments(post_id: str):
         except (json.JSONDecodeError, TypeError, KeyError) as e:
             raise HTTPException(status_code=500, detail=f"Corrupt {label} data: {e}")
 
-    comments = [
-        CommentDetail(
-            id=r[0],
-            username=r[1],
-            audio_url=f"api/audio/{r[2]}",
-            color_hex=r[3],
-            structured_object=_parse_json(r[4], AudioStructuredObject, "comment structured_object"),
-            image_analysis=_parse_json(r[5], ImageAnalysis, "comment image_analysis"),
-            squiggle_features=_parse_json(r[6], SquiggleFeatures, "comment squiggle_features"),
-            compiled_prompt=r[7],
-            created_at=r[8],
-        )
-        for r in rows
-    ]
+    comments = []
+    for r in rows:
+        status = r[9]
+        if status != "ready":
+            comments.append(CommentDetail(
+                id=r[0],
+                username=r[1],
+                audio_url="",
+                color_hex=r[3],
+                created_at=r[8],
+                status=status,
+            ))
+        else:
+            comments.append(CommentDetail(
+                id=r[0],
+                username=r[1],
+                audio_url=f"api/audio/{r[2]}",
+                color_hex=r[3],
+                structured_object=_parse_json(r[4], AudioStructuredObject, "comment structured_object"),
+                image_analysis=_parse_json(r[5], ImageAnalysis, "comment image_analysis"),
+                squiggle_features=_parse_json(r[6], SquiggleFeatures, "comment squiggle_features"),
+                compiled_prompt=r[7],
+                created_at=r[8],
+                status="ready",
+            ))
+
     return {"comments": comments}
 
 
@@ -203,7 +257,7 @@ async def delete_comment(
 ):
     db = get_db()
     rows = await db.execute_fetchall(
-        "SELECT user_id, audio_filename FROM comments WHERE id = ? AND post_id = ?",
+        "SELECT user_id, audio_filename, status FROM comments WHERE id = ? AND post_id = ?",
         (comment_id, post_id),
     )
     if not rows:
@@ -215,8 +269,11 @@ async def delete_comment(
     await db.execute("DELETE FROM comments WHERE id = ?", (comment_id,))
     await db.commit()
 
-    audio_file = AUDIO_DIR / rows[0][1]
-    if audio_file.exists():
-        audio_file.unlink()
+    # Only delete audio file if comment was ready (generating comments have no file)
+    audio_filename = rows[0][1]
+    if audio_filename:
+        audio_file = AUDIO_DIR / audio_filename
+        if audio_file.exists():
+            audio_file.unlink()
 
     return {"status": "ok"}

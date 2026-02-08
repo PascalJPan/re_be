@@ -3,17 +3,33 @@ import * as audioPlayer from './audio-player.js';
 import { navigate } from './router.js';
 import { timeAgo, toast } from './ui.js';
 import { openCreateOverlay } from './create-flow.js';
+import { onCommentStatusChange, offCommentStatusChange } from './generation-tracker.js';
+import { isAdmin } from './auth.js';
+
+let commentStatusHandler = null;
 
 export function render(container, postId) {
   container.innerHTML = '<div class="feed-loading">Loading...</div>';
   loadPost(container, postId);
-  return () => audioPlayer.clearPlayers();
+  return () => {
+    audioPlayer.clearPlayers();
+    if (commentStatusHandler) {
+      offCommentStatusChange(commentStatusHandler);
+      commentStatusHandler = null;
+    }
+  };
 }
 
 async function loadPost(container, postId) {
   try {
     const post = await api.getPost(postId);
     container.innerHTML = '';
+
+    // Clean up previous listener if re-loading
+    if (commentStatusHandler) {
+      offCommentStatusChange(commentStatusHandler);
+      commentStatusHandler = null;
+    }
 
     // Back button (arrow only)
     const back = document.createElement('button');
@@ -133,25 +149,63 @@ async function loadPost(container, postId) {
 
     container.appendChild(commentsList);
 
-    // Add-comment button at bottom right
-    const addRow = document.createElement('div');
-    addRow.className = 'detail-add-row';
-    const addBtn = document.createElement('button');
-    addBtn.className = 'add-comment-btn';
-    addBtn.textContent = '+ \u2605';
-    addBtn.addEventListener('click', () => {
-      openCreateOverlay(postId, (newCommentId) => {
+    // Subscribe to comment status changes to replace shimmers with real players
+    commentStatusHandler = (commentId, changedPostId, status) => {
+      if (changedPostId !== postId) return;
+      const shimmerEl = commentsList.querySelector(`[data-comment-id="${commentId}"]`);
+      if (!shimmerEl) return;
+
+      if (status === 'ready') {
+        // Fetch updated comments and replace the shimmer
         api.getComments(postId).then(data => {
-          const newComment = data.comments.find(c => c.id === newCommentId);
-          if (newComment) {
-            commentsList.appendChild(createCommentItem(newComment));
-            starCol.querySelector('.star-count').textContent = data.comments.length;
+          const readyComment = data.comments.find(c => c.id === commentId);
+          if (readyComment) {
+            const newItem = createCommentItem(readyComment);
+            shimmerEl.replaceWith(newItem);
           }
-        }).catch(() => loadPost(container, postId));
+          starCol.querySelector('.star-count').textContent = data.comments.length;
+        }).catch(() => {});
+      } else if (status === 'failed') {
+        // Update shimmer to show failed state
+        const placeholder = shimmerEl.querySelector('.comment-shimmer-bar');
+        if (placeholder) {
+          placeholder.style.opacity = '0.5';
+          const shimmerOverlay = placeholder.querySelector('.shimmer-overlay');
+          if (shimmerOverlay) shimmerOverlay.remove();
+          const label = placeholder.querySelector('.generating-label');
+          if (label) label.textContent = 'failed';
+        }
+      }
+    };
+    onCommentStatusChange(commentStatusHandler);
+
+    // Add-comment button at bottom right (admin only)
+    if (isAdmin()) {
+      const addRow = document.createElement('div');
+      addRow.className = 'detail-add-row';
+      const addBtn = document.createElement('button');
+      addBtn.className = 'add-comment-btn';
+      addBtn.textContent = '+ \u2605';
+      addBtn.addEventListener('click', () => {
+        openCreateOverlay(postId, (newCommentId, newStatus) => {
+          if (newStatus === 'generating') {
+            const shimmerComment = {
+              id: newCommentId,
+              username: '',
+              audio_url: '',
+              color_hex: post.color_hex,
+              created_at: new Date().toISOString(),
+              status: 'generating',
+            };
+            commentsList.appendChild(createCommentItem(shimmerComment));
+            const count = commentsList.querySelectorAll('.comment-item').length;
+            starCol.querySelector('.star-count').textContent = count;
+          }
+        });
       });
-    });
-    addRow.appendChild(addBtn);
-    container.appendChild(addRow);
+      addRow.appendChild(addBtn);
+      container.appendChild(addRow);
+    }
   } catch (e) {
     const errDiv = document.createElement('div');
     errDiv.className = 'error-msg';
@@ -164,6 +218,33 @@ async function loadPost(container, postId) {
 function createCommentItem(comment) {
   const div = document.createElement('div');
   div.className = 'comment-item';
+  div.dataset.commentId = comment.id;
+
+  // Generating/failed — show shimmer placeholder instead of audio player
+  if (comment.status && comment.status !== 'ready') {
+    const bar = document.createElement('div');
+    bar.className = 'comment-shimmer-bar';
+    bar.style.background = comment.color_hex;
+
+    if (comment.status === 'failed') {
+      bar.style.opacity = '0.5';
+      const label = document.createElement('span');
+      label.className = 'generating-label';
+      label.textContent = 'failed';
+      bar.appendChild(label);
+    } else {
+      const shimmer = document.createElement('div');
+      shimmer.className = 'shimmer-overlay';
+      bar.appendChild(shimmer);
+      const label = document.createElement('span');
+      label.className = 'generating-label';
+      label.textContent = 'generating...';
+      bar.appendChild(label);
+    }
+
+    div.appendChild(bar);
+    return div;
+  }
 
   // Waveform first
   const audioDiv = document.createElement('div');

@@ -143,6 +143,7 @@ class PostSummary(BaseModel):
     comment_count: int
     created_at: str
     status: str = "ready"
+    bpm: Optional[int] = None
 
 
 class FeedResponse(BaseModel):
@@ -174,19 +175,12 @@ class CommentDetail(BaseModel):
     username: str
     audio_url: str
     color_hex: str
-    structured_object: AudioStructuredObject
-    image_analysis: ImageAnalysis
-    squiggle_features: SquiggleFeatures
+    structured_object: Optional[AudioStructuredObject] = None
+    image_analysis: Optional[ImageAnalysis] = None
+    squiggle_features: Optional[SquiggleFeatures] = None
     compiled_prompt: str = ""
     created_at: str
-
-
-class PostCreateResponse(BaseModel):
-    post: PostDetail
-
-
-class CommentCreateResponse(BaseModel):
-    comment: CommentDetail
+    status: str = "ready"
 
 
 class ProfileResponse(BaseModel):
@@ -205,6 +199,20 @@ class PostCreateAsyncResponse(BaseModel):
 
 
 class PostStatusResponse(BaseModel):
+    id: str
+    status: str
+    error_message: str = ""
+
+
+class CommentCreateAsyncResponse(BaseModel):
+    id: str
+    post_id: str
+    status: str
+    color_hex: str
+    created_at: str
+
+
+class CommentStatusResponse(BaseModel):
     id: str
     status: str
     error_message: str = ""

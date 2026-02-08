@@ -1,0 +1,181 @@
+================================================================================
+  PIPELINE TRACE — POST
+  ID: 0bc652a6701d  |  User: fafa  |  2026-02-08T11:58:32.066085
+================================================================================
+
+================================================================================
+ STEP 1: COLOR DERIVATION
+================================================================================
+
+Input hex: #e11e39
+
+{
+  "hex": "#e11e39",
+  "hue_category": "warm_red",
+  "saturation": 0.765,
+  "lightness": 0.5
+}
+
+================================================================================
+ STEP 2: IMAGE ANALYSIS (OpenAI Vision → gpt-5.2)
+================================================================================
+
+Input: user-uploaded image (binary)
+
+Output (ImageAnalysis):
+{
+  "scene_description": "A close, slightly wide-angle selfie in a fluorescent-lit office: one person fills the left foreground with a thumbs-up, while another stands farther back, centered, giving a double thumbs-up. The light is cool and flat, bouncing off a grid ceiling and pale walls, creating a shallow depth that still reads as a long, quiet room behind them.",
+  "detected_objects": [
+    "two people",
+    "thumbs-up gestures",
+    "black knit sweater",
+    "black shirt",
+    "white pants",
+    "drop ceiling tiles",
+    "fluorescent light fixture",
+    "white walls",
+    "doorway/door",
+    "desk edge or tabletop",
+    "brown jacket or bag"
+  ],
+  "vibe": "cool fluorescent crispness, casual knit-textured friendliness, airy office-quiet spaciousness, slightly echoing sterility",
+  "emotion": "playful camaraderie with a hint of staged optimism",
+  "dominant_colors": [
+    "cool white fluorescent",
+    "soft gray ceiling",
+    "matte black clothing",
+    "pale skin tones",
+    "muted beige-brown fabric"
+  ],
+  "environment": "indoor",
+  "time_of_day": "null",
+  "location_hint": "a quiet office or classroom-like workspace with drop-ceiling lighting",
+  "ambient_sound_associations": [
+    "fluorescent light ballast hum",
+    "soft shoe squeak on linoleum or laminate",
+    "distant keyboard tapping",
+    "a chair\u2019s plastic creak shifting weight",
+    "faint HVAC airflow through ceiling vents",
+    "a phone vibrating softly on a desk",
+    "muffled hallway footsteps beyond a door"
+  ],
+  "sonic_metaphor": "A bright, steady synth hum under two quick handclaps\u2014clean, cheerful, and slightly echoing in an empty room."
+}
+
+================================================================================
+ STEP 3: SQUIGGLE FEATURE EXTRACTION
+================================================================================
+
+Output (SquiggleFeatures):
+{
+  "total_length": 3.870896,
+  "bounding_box_area": 0.523831,
+  "average_speed": 0.000788,
+  "speed_variance": 2e-06,
+  "point_count": 279
+}
+
+================================================================================
+ STEP 4: IMAGE ENHANCEMENT PROMPT (OpenAI → gpt-5.2)
+================================================================================
+
+Input: ImageAnalysis + ColorInput + SquiggleFeatures
+
+Output (ImageEnhancementPrompt):
+{
+  "emotional_intent": "Transform the playful camaraderie into an electrifying, chaotic digital riot that pulsates with frenetic energy.",
+  "visual_directive": "Dissolve the scene into a shattered, glitch-infested cyberpunk nightmare with jagged pixel fragments and neon flicker effects.",
+  "morphing_prompt": "Apply a hyper-energetic, distorted style reminiscent of a fractured VHS tape combined with vibrant neon cyberpunk aesthetics. Incorporate chaotic glitch distortions, fragmented geometric shards, and flickering RGB color channels to emphasize the sense of digital chaos. Render the subjects with exaggerated cartoon outlines and high-contrast halftone patterns, overlaying bold neon pink and electric cyan hues to amplify the warm red accent. Use thick, aggressive brushstrokes or pixelated distortion to create a raw, rebellious visual explosion that keeps the subjects recognizable amidst the chaos.",
+  "style_reference": "Cyberpunk manga panel with glitch aesthetics"
+}
+
+================================================================================
+ STEP 5: IMAGE MORPHING (OpenAI → gpt-image-1)
+================================================================================
+
+Input image: original + color overlay (Pillow)
+Prompt sent to gpt-image-1:
+
+  "Apply a hyper-energetic, distorted style reminiscent of a fractured VHS tape combined with vibrant neon cyberpunk aesthetics. Incorporate chaotic glitch distortions, fragmented geometric shards, and flickering RGB color channels to emphasize the sense of digital chaos. Render the subjects with exaggerated cartoon outlines and high-contrast halftone patterns, overlaying bold neon pink and electric cyan hues to amplify the warm red accent. Use thick, aggressive brushstrokes or pixelated distortion to create a raw, rebellious visual explosion that keeps the subjects recognizable amidst the chaos."
+
+Output: morphed image bytes (stored as post image) — SUCCESS
+
+================================================================================
+ STEP 6: AUDIO STRUCTURED OBJECT (OpenAI → gpt-5.2)
+================================================================================
+
+Input: ImageAnalysis + ColorInput + SquiggleFeatures
+
+Output (AudioStructuredObject):
+{
+  "audio_type": "music",
+  "mood": {
+    "primary": "playful",
+    "secondary": "friendly"
+  },
+  "energy": 0.75,
+  "tempo": "medium",
+  "density": "dense",
+  "texture": [
+    "bright",
+    "cheerful",
+    "clean"
+  ],
+  "sound_references": [
+    "bright synth hum",
+    "handclaps",
+    "office ambient sounds"
+  ],
+  "duration_seconds": 18,
+  "bpm": 120,
+  "musical_key": "G major",
+  "relation_to_parent": "original",
+  "confidence": 0.9,
+  "instruments": [
+    "analog synth",
+    "digital handclaps",
+    "electric bass",
+    "bright pad"
+  ],
+  "genre_hint": "upbeat lo-fi pop",
+  "harmonic_mood": "joyful and energetic",
+  "dynamic_shape": "steady build with slight rhythmic accents",
+  "sonic_palette": "crisp digital textures with warm synth layers"
+}
+
+================================================================================
+ STEP 7: COMPILED PROMPT (deterministic logic)
+================================================================================
+
+Input: AudioStructuredObject + ColorInput + ImageAnalysis + SquiggleFeatures
+
+Output (prompt string sent to ElevenLabs):
+
+  "Instrumental music track. Genre: upbeat lo-fi pop. Scene: A close, slightly wide-angle selfie in a fluorescent-lit office: one person fills the left foreground with a thumbs-up, while another stands farther back, centered, giving a double thumbs-up. The light is cool and flat, bouncing off a grid ceiling and pale walls, creating a shallow depth that still reads as a long, quiet room behind them.. Vibe: cool fluorescent crispness, casual knit-textured friendliness, airy office-quiet spaciousness, slightly echoing sterility. Setting: null indoor. Sounds like: A bright, steady synth hum under two quick handclaps—clean, cheerful, and slightly echoing in an empty room.. Intensely surging, playful and friendly mood with a warm and bold, vivid tonal palette, bright, cheerful, clean textures, and flowing, melodic phrases with layered complexity. Instruments: analog synth, digital handclaps, electric bass, bright pad. Timbre: crisp digital textures with warm synth layers. Harmonic feel: joyful and energetic. Dynamic shape: steady build with slight rhythmic accents. Drawing from: bright synth hum, handclaps, office ambient sounds. Make it musically engaging with clear rhythm and forward momentum. 120 BPM, in G major, medium tempo, dense density, 18 seconds long. Instrumental only, no vocals, no lyrics."
+
+================================================================================
+ STEP 8: ELEVENLABS COMPOSITION PLAN (/v1/music/plan)
+================================================================================
+
+Request payload:
+{
+  "prompt": "Instrumental music track. Genre: upbeat lo-fi pop. Scene: A close, slightly wide-angle selfie in a fluorescent-lit office: one person fills the left foreground with a thumbs-up, while another stands farther back, centered, giving a double thumbs-up. The light is cool and flat, bouncing off a grid ceiling and pale walls, creating a shallow depth that still reads as a long, quiet room behind them.. Vibe: cool fluorescent crispness, casual knit-textured friendliness, airy office-quiet spaciousness, slightly echoing sterility. Setting: null indoor. Sounds like: A bright, steady synth hum under two quick handclaps\u2014clean, cheerful, and slightly echoing in an empty room.. Intensely surging, playful and friendly mood with a warm and bold, vivid tonal palette, bright, cheerful, clean textures, and flowing, melodic phrases with layered complexity. Instruments: analog synth, digital handclaps, electric bass, bright pad. Timbre: crisp digital textures with warm synth layers. Harmonic feel: joyful and energetic. Dynamic shape: steady build with slight rhythmic accents. Drawing from: bright synth hum, handclaps, office ambient sounds. Make it musically engaging with clear rhythm and forward momentum. 120 BPM, in G major, medium tempo, dense density, 18 seconds long. Instrumental only, no vocals, no lyrics.",
+  "music_length_ms": 18000,
+  "prompt_influence": 0.85,
+  "force_instrumental": true
+}
+
+Response: composition_plan JSON (opaque, passed to next step)
+
+================================================================================
+ STEP 9: ELEVENLABS AUDIO GENERATION (/v1/music)
+================================================================================
+
+Request: { composition_plan: <from previous step>, output_format: "mp3" }
+
+Output: 0bc652a6701d.mp3
+Saved to: backend/audio_files/0bc652a6701d.mp3
+
+================================================================================
+  TRACE COMPLETE — 0bc652a6701d.mp3
+================================================================================

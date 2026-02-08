@@ -1,5 +1,6 @@
 import * as router from './router.js';
-import { getUser } from './auth.js';
+import { getUser, setUser, setAdmin, isAdmin } from './auth.js';
+import * as api from './api.js';
 import * as feed from './feed.js';
 import * as profile from './profile.js';
 import * as postDetail from './post-detail.js';
@@ -8,6 +9,56 @@ import { initWigglyBackground } from './wiggly-bg.js';
 
 const app = document.getElementById('app');
 
+// --- Username + passcode popup ---
+function showUsernamePopup() {
+  return new Promise((resolve) => {
+    const overlay = document.createElement('div');
+    overlay.className = 'username-popup-overlay';
+    overlay.innerHTML = `
+      <div class="username-popup">
+        <h2>welcome</h2>
+        <form class="username-popup-form">
+          <input type="text" class="username-popup-input"
+                 placeholder="your name" maxlength="24" autofocus />
+          <input type="password" class="username-popup-input username-popup-passcode"
+                 placeholder="passcode" inputmode="numeric" />
+          <p class="username-popup-hint">admin? enter the passcode to create.<br/>otherwise just vibe.</p>
+          <button type="submit" class="primary username-popup-btn">enter</button>
+        </form>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    const nameInput = overlay.querySelector('.username-popup-input:first-of-type');
+    const codeInput = overlay.querySelector('.username-popup-passcode');
+    const form = overlay.querySelector('.username-popup-form');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = nameInput.value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+      if (!name) return;
+      setUser(name);
+
+      const code = codeInput.value.trim();
+      if (code) {
+        try {
+          const result = await api.verifyPasscode(code);
+          setAdmin(result.admin);
+        } catch {
+          setAdmin(false);
+        }
+      } else {
+        setAdmin(false);
+      }
+
+      overlay.remove();
+      resolve();
+    });
+
+    requestAnimationFrame(() => nameInput.focus());
+  });
+}
+
 // --- Navbar ---
 function updateNav() {
   const nav = document.getElementById('navbar');
@@ -15,34 +66,19 @@ function updateNav() {
 
   nav.innerHTML = `
     <a href="#/feed" class="nav-brand" aria-label="Home">
-      <svg class="nav-logo" viewBox="0 0 32 32" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M 16 4 C 9.4 4 4 9.4 4 16 C 4 22.6 9.4 28 16 28 C 22.6 28 28 22.6 28 16 C 28 12.2 26.2 8.8 23.4 6.6" style="stroke-dasharray: none;">
-          <animate attributeName="d" dur="3s" repeatCount="indefinite" values="
-            M 16 4 C 9.4 4 4 9.4 4 16 C 4 22.6 9.4 28 16 28 C 22.6 28 28 22.6 28 16 C 28 12.2 26.2 8.8 23.4 6.6;
-            M 16 3.5 C 8.8 4.5 3.5 9.8 4.2 16.3 C 4.8 22.8 9.8 28.2 16.3 27.8 C 22.8 27.2 28.2 22.2 27.8 15.7 C 27.5 11.9 25.8 8.6 23 6.2;
-            M 16 4.5 C 10 3.5 4.5 10 3.8 15.7 C 3.2 22.4 9 28.5 15.7 28.2 C 22.4 28.8 28.5 23 28.2 16.3 C 28.5 12.5 26.5 9 23.8 7;
-            M 16 4 C 9.4 4 4 9.4 4 16 C 4 22.6 9.4 28 16 28 C 22.6 28 28 22.6 28 16 C 28 12.2 26.2 8.8 23.4 6.6
-          " />
-        </path>
-        <polyline points="23.4 2.5 23.4 6.6 19.2 6.6">
-          <animate attributeName="points" dur="3s" repeatCount="indefinite" values="
-            23.4 2.5 23.4 6.6 19.2 6.6;
-            23 2.2 23 6.2 18.8 6.2;
-            23.8 2.8 23.8 7 19.5 7;
-            23.4 2.5 23.4 6.6 19.2 6.6
-          " />
-        </polyline>
-      </svg>
+      <img class="nav-logo" src="logo.png" alt="re" />
     </a>
     <div class="nav-actions">
-      <button class="nav-create-btn" title="New post">+</button>
+      ${isAdmin() ? '<button class="nav-create-btn" title="New post">+</button>' : ''}
       <a href="#/profile/${user.username}" class="nav-user">@${user.username}</a>
     </div>
   `;
 
-  nav.querySelector('.nav-create-btn').addEventListener('click', () => {
-    openCreateOverlay(null);
-  });
+  if (isAdmin()) {
+    nav.querySelector('.nav-create-btn').addEventListener('click', () => {
+      openCreateOverlay(null);
+    });
+  }
 }
 
 // --- Routes ---
@@ -59,8 +95,13 @@ router.addRoute('/profile/:username', (params) => {
 });
 
 // --- Init ---
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   initWigglyBackground();
+
+  if (!getUser()) {
+    await showUsernamePopup();
+  }
+
   updateNav();
   router.start();
 });

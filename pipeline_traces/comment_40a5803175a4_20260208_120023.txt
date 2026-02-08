@@ -1,0 +1,204 @@
+================================================================================
+  PIPELINE TRACE — COMMENT
+  ID: 40a5803175a4  |  User: fafa  |  2026-02-08T12:00:23.261221
+================================================================================
+
+================================================================================
+ STEP 1: COLOR DERIVATION
+================================================================================
+
+Input hex: #0056ff
+
+{
+  "hex": "#0056ff",
+  "hue_category": "cool_blue",
+  "saturation": 1.0,
+  "lightness": 0.5
+}
+
+================================================================================
+ STEP 2: IMAGE ANALYSIS (OpenAI Vision → gpt-5.2)
+================================================================================
+
+Input: user-uploaded image (binary)
+
+Output (ImageAnalysis):
+{
+  "scene_description": "A close, slightly off-center selfie in a quiet classroom: a person in the foreground holds a matte dark-blue water bottle, its cylindrical shape catching a soft, cool overhead glow. Behind them, white tables recede into a gray room with a tiled ceiling and fluorescent fixtures, creating a shallow hush and institutional depth.",
+  "detected_objects": [
+    "person (partial face and hand)",
+    "dark-blue reusable water bottle (matte plastic/metal)",
+    "white tables/desks (laminate)",
+    "gray/white walls",
+    "ceiling tiles",
+    "fluorescent light fixtures",
+    "door",
+    "whiteboard or wall panel"
+  ],
+  "vibe": "cool fluorescent stillness, matte utilitarian quiet, slightly grainy late-day fatigue, sterile echoing spaciousness",
+  "emotion": "wry self-aware boredom mixed with low-grade anticipation",
+  "dominant_colors": [
+    "cool gray walls",
+    "off-white ceiling tiles",
+    "bright white tabletops",
+    "matte navy-blue bottle",
+    "soft black clothing",
+    "muted skin tones"
+  ],
+  "environment": "indoor",
+  "time_of_day": "afternoon",
+  "location_hint": "a classroom or training room with fluorescent lighting",
+  "ambient_sound_associations": [
+    "fluorescent lights faintly buzzing",
+    "HVAC vent breathing in steady pulses",
+    "rubber chair legs squeaking against the floor",
+    "a water bottle cap clicking as it shifts in the hand",
+    "distant hallway footsteps muffled by doors",
+    "a door latch lightly rattling from air pressure",
+    "fabric rustle from a sleeve moving near the microphone"
+  ],
+  "sonic_metaphor": "A thin fluorescent hum wrapped around a single plastic click, like a quiet room holding its breath between classes."
+}
+
+================================================================================
+ STEP 3: SQUIGGLE FEATURE EXTRACTION
+================================================================================
+
+Output (SquiggleFeatures):
+{
+  "total_length": 0.590725,
+  "bounding_box_area": 0.035393,
+  "average_speed": 0.000324,
+  "speed_variance": 0.0,
+  "point_count": 110
+}
+
+================================================================================
+ PARENT POST AUDIO OBJECT (inherited bpm/key/duration)
+================================================================================
+
+{
+  "audio_type": "music",
+  "mood": {
+    "primary": "playful",
+    "secondary": "restlessly focused"
+  },
+  "energy": 0.82,
+  "tempo": "fast",
+  "density": "dense",
+  "texture": [
+    "staccato",
+    "clicky",
+    "glossy-synthetic",
+    "tight-gated",
+    "layered arpeggios",
+    "micro-percussive"
+  ],
+  "sound_references": [
+    "sticky note edge peel snap",
+    "fingertip rubbing on paper",
+    "paper sliding on tabletop",
+    "phone handling rustle",
+    "subtle electronics room hum"
+  ],
+  "duration_seconds": 18,
+  "bpm": 164,
+  "musical_key": "E major",
+  "relation_to_parent": "original",
+  "confidence": 0.86,
+  "instruments": [
+    "bright analog synth arpeggiator",
+    "FM pluck lead",
+    "808 kick",
+    "tight clap/snare"
+  ],
+  "genre_hint": "hyperpop",
+  "harmonic_mood": "sparkly and resolving with quick, curious turnarounds",
+  "dynamic_shape": "quick drop-in, steady forward push with small rhythmic fills, final bar filter-lift then hard stop",
+  "sonic_palette": "neon-clean digital brightness with papery clicks, short room reverb, and crisp transient focus"
+}
+
+================================================================================
+ STEP 4: AUDIO STRUCTURED OBJECT (OpenAI → gpt-5.2)
+================================================================================
+
+Input: ImageAnalysis + ColorInput + SquiggleFeatures + parent AudioStructuredObject
+
+Output (AudioStructuredObject):
+{
+  "audio_type": "music",
+  "mood": {
+    "primary": "playful",
+    "secondary": "restlessly focused"
+  },
+  "energy": 0.85,
+  "tempo": "fast",
+  "density": "dense",
+  "texture": [
+    "staccato",
+    "clicky",
+    "glossy-synthetic",
+    "tight-gated",
+    "layered arpeggios",
+    "micro-percussive"
+  ],
+  "sound_references": [
+    "sticky note edge peel snap",
+    "fingertip rubbing on paper",
+    "paper sliding on tabletop",
+    "phone handling rustle",
+    "subtle electronics room hum"
+  ],
+  "duration_seconds": 18,
+  "bpm": 164,
+  "musical_key": "E major",
+  "relation_to_parent": "variation",
+  "confidence": 0.86,
+  "instruments": [
+    "bright analog synth arpeggiator",
+    "FM pluck lead",
+    "808 kick",
+    "tight clap/snare"
+  ],
+  "genre_hint": "hyperpop",
+  "harmonic_mood": "sparkly and resolving with quick, curious turnarounds",
+  "dynamic_shape": "quick drop-in, steady forward push with small rhythmic fills, final bar filter-lift then hard stop",
+  "sonic_palette": "neon-clean digital brightness with papery clicks, short room reverb, and crisp transient focus"
+}
+
+================================================================================
+ STEP 5: COMPILED PROMPT (deterministic logic)
+================================================================================
+
+Input: AudioStructuredObject + ColorInput + ImageAnalysis + SquiggleFeatures
+
+Output (prompt string sent to ElevenLabs):
+
+  "Instrumental music track. Genre: hyperpop. Scene: A close, slightly off-center selfie in a quiet classroom: a person in the foreground holds a matte dark-blue water bottle, its cylindrical shape catching a soft, cool overhead glow. Behind them, white tables recede into a gray room with a tiled ceiling and fluorescent fixtures, creating a shallow hush and institutional depth.. Vibe: cool fluorescent stillness, matte utilitarian quiet, slightly grainy late-day fatigue, sterile echoing spaciousness. Setting: afternoon indoor. Sounds like: A thin fluorescent hum wrapped around a single plastic click, like a quiet room holding its breath between classes.. Explosively energetic, playful and restlessly focused mood with a cool and ethereal, vivid tonal palette, staccato, clicky, glossy-synthetic, tight-gated, layered arpeggios, micro-percussive textures, and sustained pads and slow drones. Instruments: bright analog synth arpeggiator, FM pluck lead, 808 kick, tight clap/snare. Timbre: neon-clean digital brightness with papery clicks, short room reverb, and crisp transient focus. Harmonic feel: sparkly and resolving with quick, curious turnarounds. Dynamic shape: quick drop-in, steady forward push with small rhythmic fills, final bar filter-lift then hard stop. Drawing from: sticky note edge peel snap, fingertip rubbing on paper, paper sliding on tabletop, phone handling rustle, subtle electronics room hum. Make it musically engaging with clear rhythm and forward momentum. 164 BPM, in E major, fast tempo, dense density, 18 seconds long. Instrumental only, no vocals, no lyrics."
+
+================================================================================
+ STEP 6: ELEVENLABS COMPOSITION PLAN (/v1/music/plan)
+================================================================================
+
+Request payload:
+{
+  "prompt": "Instrumental music track. Genre: hyperpop. Scene: A close, slightly off-center selfie in a quiet classroom: a person in the foreground holds a matte dark-blue water bottle, its cylindrical shape catching a soft, cool overhead glow. Behind them, white tables recede into a gray room with a tiled ceiling and fluorescent fixtures, creating a shallow hush and institutional depth.. Vibe: cool fluorescent stillness, matte utilitarian quiet, slightly grainy late-day fatigue, sterile echoing spaciousness. Setting: afternoon indoor. Sounds like: A thin fluorescent hum wrapped around a single plastic click, like a quiet room holding its breath between classes.. Explosively energetic, playful and restlessly focused mood with a cool and ethereal, vivid tonal palette, staccato, clicky, glossy-synthetic, tight-gated, layered arpeggios, micro-percussive textures, and sustained pads and slow drones. Instruments: bright analog synth arpeggiator, FM pluck lead, 808 kick, tight clap/snare. Timbre: neon-clean digital brightness with papery clicks, short room reverb, and crisp transient focus. Harmonic feel: sparkly and resolving with quick, curious turnarounds. Dynamic shape: quick drop-in, steady forward push with small rhythmic fills, final bar filter-lift then hard stop. Drawing from: sticky note edge peel snap, fingertip rubbing on paper, paper sliding on tabletop, phone handling rustle, subtle electronics room hum. Make it musically engaging with clear rhythm and forward momentum. 164 BPM, in E major, fast tempo, dense density, 18 seconds long. Instrumental only, no vocals, no lyrics.",
+  "music_length_ms": 18000,
+  "prompt_influence": 0.85,
+  "force_instrumental": true
+}
+
+Response: composition_plan JSON (opaque, passed to next step)
+
+================================================================================
+ STEP 7: ELEVENLABS AUDIO GENERATION (/v1/music)
+================================================================================
+
+Request: { composition_plan: <from previous step>, output_format: "mp3" }
+
+Output: 40a5803175a4.mp3
+Saved to: backend/audio_files/40a5803175a4.mp3
+
+================================================================================
+  TRACE COMPLETE — 40a5803175a4.mp3
+================================================================================

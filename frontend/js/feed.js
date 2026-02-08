@@ -2,21 +2,27 @@ import * as api from './api.js';
 import * as audioPlayer from './audio-player.js';
 import { navigate } from './router.js';
 import { timeAgo } from './ui.js';
-import { onStatusChange } from './generation-tracker.js';
+import { onStatusChange, offStatusChange } from './generation-tracker.js';
+import * as feedParticles from './feed-particles.js';
 
 let observer = null;
 let currentlyPlaying = null;
 let statusUnsub = null;
+let scrollHandler = null;
+let prefetchedPost = null;
+let swiping = false;
 
 export function render(container) {
   container.innerHTML = '<div class="feed-loading">Loading...</div>';
   container.classList.add('feed-scroll');
 
+  feedParticles.init();
+
   // Subscribe to generation status changes to re-render feed
   statusUnsub = (postId, status) => {
-    // Re-render the whole feed when any post transitions
     cleanup(container);
     container.classList.add('feed-scroll');
+    feedParticles.init();
     loadFeed(container, 1);
   };
   onStatusChange(statusUnsub);
@@ -27,12 +33,17 @@ export function render(container) {
 
 function cleanup(container) {
   container.classList.remove('feed-scroll');
+  if (statusUnsub) { offStatusChange(statusUnsub); statusUnsub = null; }
   if (observer) { observer.disconnect(); observer = null; }
+  if (scrollHandler) { container.removeEventListener('scroll', scrollHandler); scrollHandler = null; }
   if (currentlyPlaying) {
     currentlyPlaying.feedStop();
     currentlyPlaying = null;
   }
   audioPlayer.clearPlayers();
+  feedParticles.destroy();
+  prefetchedPost = null;
+  swiping = false;
 }
 
 async function loadFeed(container, page) {
@@ -42,6 +53,7 @@ async function loadFeed(container, page) {
 
     if (data.posts.length === 0) {
       container.classList.remove('feed-scroll');
+      feedParticles.destroy();
       container.innerHTML = `
         <div class="empty-state">
           <p>No posts yet</p>
@@ -55,7 +67,7 @@ async function loadFeed(container, page) {
     for (const post of data.posts) {
       const { wrapper, audio } = createPostCard(post);
       container.appendChild(wrapper);
-      items.push({ wrapper, audio });
+      items.push({ wrapper, audio, post });
     }
 
     if (data.pages > 1) {
@@ -67,6 +79,7 @@ async function loadFeed(container, page) {
         prev.addEventListener('click', () => {
           cleanup(container);
           container.classList.add('feed-scroll');
+          feedParticles.init();
           loadFeed(container, page - 1);
         });
         pager.appendChild(prev);
@@ -81,6 +94,7 @@ async function loadFeed(container, page) {
         next.addEventListener('click', () => {
           cleanup(container);
           container.classList.add('feed-scroll');
+          feedParticles.init();
           loadFeed(container, page + 1);
         });
         pager.appendChild(next);
@@ -88,7 +102,25 @@ async function loadFeed(container, page) {
       container.appendChild(pager);
     }
 
-    setupAutoplay(items);
+    // Set initial particle color from first post
+    const firstReady = data.posts.find(p => p.status === 'ready');
+    if (firstReady) {
+      feedParticles.setActivePost(firstReady.color_hex, firstReady.bpm);
+    }
+
+    // Scroll wind listener
+    let lastScrollTop = container.scrollTop;
+    scrollHandler = () => {
+      const delta = container.scrollTop - lastScrollTop;
+      lastScrollTop = container.scrollTop;
+      feedParticles.applyScrollForce(delta);
+    };
+    container.addEventListener('scroll', scrollHandler, { passive: true });
+
+    setupAutoplay(items, container);
+
+    // Start prefetch for random post
+    triggerPrefetch(firstReady ? firstReady.id : null);
   } catch (e) {
     const errDiv = document.createElement('div');
     errDiv.className = 'error-msg';
@@ -98,28 +130,223 @@ async function loadFeed(container, page) {
   }
 }
 
-function setupAutoplay(items) {
+function triggerPrefetch(excludeId) {
+  prefetchedPost = null;
+  api.getRandomPost(excludeId).then(post => {
+    prefetchedPost = post;
+    // Preload the image
+    if (post && post.image_url) {
+      const img = new Image();
+      img.src = post.image_url;
+    }
+  }).catch(() => {
+    prefetchedPost = null;
+  });
+}
+
+function setupAutoplay(items, container) {
   if (observer) observer.disconnect();
 
   observer = new IntersectionObserver((entries) => {
     for (const entry of entries) {
       if (entry.isIntersecting && entry.intersectionRatio >= 0.6) {
         const audio = entry.target._feedAudio;
+        const color = entry.target._feedColor;
+        const postBpm = entry.target._feedBpm;
+
+        if (color) {
+          feedParticles.setActivePost(color, postBpm);
+        }
+
         if (audio && audio !== currentlyPlaying) {
           if (currentlyPlaying) currentlyPlaying.feedStop();
           currentlyPlaying = audio;
           audio.feedPlay();
+          feedParticles.setPlaying(true);
         }
       }
     }
   }, { threshold: 0.6 });
 
-  for (const { wrapper, audio } of items) {
+  for (const { wrapper, audio, post } of items) {
+    wrapper._feedColor = post.color_hex;
+    wrapper._feedBpm = post.bpm || null;
     if (audio) {
       wrapper._feedAudio = audio;
-      observer.observe(wrapper);
+    }
+    observer.observe(wrapper);
+  }
+
+  // Set up swipe detection on each wrapper
+  for (const { wrapper } of items) {
+    setupSwipe(wrapper, container);
+  }
+}
+
+function setupSwipe(wrapper, container) {
+  let startX = 0, startY = 0, deltaX = 0, tracking = false, isHorizontal = null;
+
+  function onStart(e) {
+    if (swiping) return;
+    // Don't capture swipe if post is generating/failed
+    if (wrapper.classList.contains('post-card-generating')) return;
+    const touch = e.touches ? e.touches[0] : e;
+    startX = touch.clientX;
+    startY = touch.clientY;
+    deltaX = 0;
+    tracking = true;
+    isHorizontal = null;
+    wrapper.style.transition = 'none';
+  }
+
+  function onMove(e) {
+    if (!tracking || swiping) return;
+    const touch = e.touches ? e.touches[0] : e;
+    deltaX = touch.clientX - startX;
+    const deltaY = touch.clientY - startY;
+
+    // Decide direction once we have enough movement
+    if (isHorizontal === null && (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10)) {
+      isHorizontal = Math.abs(deltaX) > Math.abs(deltaY) * 1.5;
+    }
+
+    if (isHorizontal) {
+      e.preventDefault();
+      // Visual drag feedback — cap at ~40% of width
+      const maxDrag = wrapper.offsetWidth * 0.4;
+      const clamped = Math.max(-maxDrag, Math.min(maxDrag, deltaX));
+      const opacity = 1 - Math.abs(clamped) / wrapper.offsetWidth * 0.5;
+      wrapper.style.transform = `translateX(${clamped}px)`;
+      wrapper.style.opacity = opacity;
     }
   }
+
+  function onEnd() {
+    if (!tracking || swiping) { tracking = false; return; }
+    tracking = false;
+
+    if (isHorizontal && Math.abs(deltaX) > 80) {
+      // Trigger swipe
+      performSwipe(wrapper, container, deltaX > 0 ? 'right' : 'left');
+    } else {
+      // Snap back
+      wrapper.style.transition = 'transform 0.2s ease-out, opacity 0.2s ease-out';
+      wrapper.style.transform = '';
+      wrapper.style.opacity = '';
+    }
+  }
+
+  // Touch events
+  wrapper.addEventListener('touchstart', onStart, { passive: true });
+  wrapper.addEventListener('touchmove', onMove, { passive: false });
+  wrapper.addEventListener('touchend', onEnd);
+
+  // Mouse events for desktop
+  wrapper.addEventListener('mousedown', (e) => {
+    // Only left button, and not on links
+    if (e.button !== 0) return;
+    if (e.target.closest('a')) return;
+    onStart(e);
+    const onMouseMove = (ev) => onMove(ev);
+    const onMouseUp = () => {
+      onEnd();
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+  });
+}
+
+async function performSwipe(wrapper, container, direction) {
+  swiping = true;
+
+  // Stop audio on current card
+  if (currentlyPlaying) {
+    currentlyPlaying.feedStop();
+    currentlyPlaying = null;
+    feedParticles.setPlaying(false);
+  }
+
+  // Use prefetched or fetch fresh
+  let newPost = prefetchedPost;
+  prefetchedPost = null;
+
+  if (!newPost) {
+    try {
+      const currentId = wrapper._feedColor ? wrapper.querySelector('.post-card-info-star')?.href?.split('/').pop() : null;
+      newPost = await api.getRandomPost(currentId);
+    } catch {
+      // No other posts — snap back
+      wrapper.style.transition = 'transform 0.2s ease-out, opacity 0.2s ease-out';
+      wrapper.style.transform = '';
+      wrapper.style.opacity = '';
+      swiping = false;
+      return;
+    }
+  }
+
+  // Slide current card out
+  wrapper.style.transition = '';
+  const outClass = direction === 'left' ? 'swipe-out-left' : 'swipe-out-right';
+  wrapper.classList.add(outClass);
+
+  // Build new card
+  const { wrapper: newWrapper, audio: newAudio } = createPostCard(newPost);
+  newWrapper._feedColor = newPost.color_hex;
+  newWrapper._feedBpm = newPost.bpm || null;
+
+  // Position new card off-screen on opposite side
+  const inClass = direction === 'left' ? 'swipe-in-right' : 'swipe-in-left';
+  newWrapper.classList.add(inClass);
+
+  // Wait for slide-out animation
+  await new Promise(r => setTimeout(r, 300));
+
+  // Replace wrapper in DOM
+  const parent = wrapper.parentNode;
+  if (!parent) { swiping = false; return; }
+  parent.insertBefore(newWrapper, wrapper);
+  wrapper.remove();
+
+  // Unobserve old, observe new
+  if (observer) {
+    observer.unobserve(wrapper);
+    if (newAudio) newWrapper._feedAudio = newAudio;
+    observer.observe(newWrapper);
+  }
+
+  // Trigger slide-in
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      newWrapper.classList.remove(inClass);
+      newWrapper.classList.add('swipe-in-active');
+
+      // Update particles
+      feedParticles.setActivePost(newPost.color_hex, newPost.bpm);
+
+      // Auto-play new post audio
+      if (newAudio) {
+        currentlyPlaying = newAudio;
+        newAudio.feedPlay();
+        feedParticles.setPlaying(true);
+      }
+
+      // Clean up animation classes after transition
+      setTimeout(() => {
+        newWrapper.classList.remove('swipe-in-active');
+        newWrapper.style.transform = '';
+        newWrapper.style.opacity = '';
+        swiping = false;
+
+        // Set up swipe on new card
+        setupSwipe(newWrapper, container);
+
+        // Prefetch next
+        triggerPrefetch(newPost.id);
+      }, 320);
+    });
+  });
 }
 
 function createPostCard(post) {
@@ -221,10 +448,12 @@ function createPostCard(post) {
     if (!audio.paused) {
       audio.feedStop();
       currentlyPlaying = null;
+      feedParticles.setPlaying(false);
     } else {
       if (currentlyPlaying && currentlyPlaying !== audio) currentlyPlaying.feedStop();
       currentlyPlaying = audio;
       audio.feedPlay();
+      feedParticles.setPlaying(true);
     }
   });
 

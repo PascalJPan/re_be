@@ -1,0 +1,178 @@
+================================================================================
+  PIPELINE TRACE — POST
+  ID: 6db2cdbf03b0  |  User: jonas  |  2026-02-08T11:39:48.728880
+================================================================================
+
+================================================================================
+ STEP 1: COLOR DERIVATION
+================================================================================
+
+Input hex: #ff5000
+
+{
+  "hex": "#ff5000",
+  "hue_category": "warm_orange",
+  "saturation": 1.0,
+  "lightness": 0.5
+}
+
+================================================================================
+ STEP 2: IMAGE ANALYSIS (OpenAI Vision → gpt-5.2)
+================================================================================
+
+Input: user-uploaded image (binary)
+
+Output (ImageAnalysis):
+{
+  "scene_description": "A softly lit indoor workspace scene: a person crouches low in the foreground, framed by a tall blue event banner that reads like a vertical wall of ambition. The light is flat and cool, bouncing off white walls and tabletops, while cables and edges of furniture create shallow spatial depth\u2014everything feels close, practical, and slightly improvised.",
+  "detected_objects": [
+    "person crouching",
+    "blue promotional banner (Hack-Nation / AI hackathon)",
+    "white tables/desks",
+    "black cables/wires",
+    "jacket/coat draped on chair or surface",
+    "white wall",
+    "flooring"
+  ],
+  "vibe": "fluorescent-clean, cable-tangled, poster-blue urgency, dry-air focus",
+  "emotion": "self-conscious determination mixed with quiet pre-launch nerves",
+  "dominant_colors": [
+    "deep banner-blue",
+    "cool white",
+    "charcoal black",
+    "muted olive-brown fabric",
+    "denim blue-gray"
+  ],
+  "environment": "indoor",
+  "time_of_day": "null",
+  "location_hint": "a classroom or coworking space set up for an AI hackathon event",
+  "ambient_sound_associations": [
+    "fluorescent light ballast faint buzzing",
+    "laptop fan whirring from nearby tables",
+    "keyboard clacks in short, anxious bursts",
+    "a chair leg scraping lightly on linoleum",
+    "cable ends tapping against a tabletop when shifted",
+    "muffled hallway footsteps and a distant door latch",
+    "soft fabric rustle from a jacket being adjusted"
+  ],
+  "sonic_metaphor": "Like a tight loop of electronic hum under a held breath\u2014punctuated by sudden, precise clicks that feel like ideas snapping into place."
+}
+
+================================================================================
+ STEP 3: SQUIGGLE FEATURE EXTRACTION
+================================================================================
+
+Output (SquiggleFeatures):
+{
+  "total_length": 0.517457,
+  "bounding_box_area": 0.006692,
+  "average_speed": 0.002568,
+  "speed_variance": 2e-06,
+  "point_count": 14
+}
+
+================================================================================
+ STEP 4: IMAGE ENHANCEMENT PROMPT (OpenAI → gpt-5.2)
+================================================================================
+
+Input: ImageAnalysis + ColorInput + SquiggleFeatures
+
+Output (ImageEnhancementPrompt):
+{
+  "emotional_intent": "Shatter the quiet determination into a chaotic storm of digital fragmentation and electric energy.",
+  "visual_directive": "Dissolve the scene into a glitchy, neon-lit cyberpunk nightmare with jagged distortions and layered holographic overlays.",
+  "morphing_prompt": "Transform the original image into a high-contrast, cyberpunk collage with thick, textured brush strokes and sharp glitch artifacts. Overlay fractured neon gridlines and duplicated, semi-transparent layers of the workspace, emphasizing the blue banner as a luminous, fractured hologram. Incorporate harsh halftone patterns and pixelated noise to evoke a digital breakdown, while maintaining the recognizable crouching figure amidst the chaos. Use vivid, saturated colors with an emphasis on the warm orange hue as if it\u2019s bleeding through the digital distortion, creating a visceral, frenetic energy.",
+  "style_reference": "Cyberpunk manga panel"
+}
+
+================================================================================
+ STEP 5: IMAGE MORPHING (OpenAI → gpt-image-1)
+================================================================================
+
+Input image: original + color overlay (Pillow)
+Prompt sent to gpt-image-1:
+
+  "Transform the original image into a high-contrast, cyberpunk collage with thick, textured brush strokes and sharp glitch artifacts. Overlay fractured neon gridlines and duplicated, semi-transparent layers of the workspace, emphasizing the blue banner as a luminous, fractured hologram. Incorporate harsh halftone patterns and pixelated noise to evoke a digital breakdown, while maintaining the recognizable crouching figure amidst the chaos. Use vivid, saturated colors with an emphasis on the warm orange hue as if it’s bleeding through the digital distortion, creating a visceral, frenetic energy."
+
+Output: morphed image bytes (stored as post image) — SUCCESS
+
+================================================================================
+ STEP 6: AUDIO STRUCTURED OBJECT (OpenAI → gpt-5.2)
+================================================================================
+
+Input: ImageAnalysis + ColorInput + SquiggleFeatures
+
+Output (AudioStructuredObject):
+{
+  "audio_type": "music",
+  "mood": {
+    "primary": "tense",
+    "secondary": "focused"
+  },
+  "energy": 0.65,
+  "tempo": "medium",
+  "density": "medium",
+  "texture": [
+    "techno-inspired",
+    "tight",
+    "mechanical"
+  ],
+  "sound_references": [
+    "electronic hum",
+    "clicks",
+    "faint buzzing",
+    "keyboard clacks",
+    "tapping cables"
+  ],
+  "duration_seconds": 18,
+  "bpm": 120,
+  "musical_key": "E minor",
+  "relation_to_parent": "original",
+  "confidence": 0.85,
+  "instruments": [
+    "analog synth",
+    "digital percussion",
+    "glitchy sound effects"
+  ],
+  "genre_hint": "ambient techno",
+  "harmonic_mood": "suspenseful, tense",
+  "dynamic_shape": "steady build with subtle variations, occasional sharp accents",
+  "sonic_palette": "cold digital textures, precise metallic timbres, faint electronic hums"
+}
+
+================================================================================
+ STEP 7: COMPILED PROMPT (deterministic logic)
+================================================================================
+
+Input: AudioStructuredObject + ColorInput + ImageAnalysis + SquiggleFeatures
+
+Output (prompt string sent to ElevenLabs):
+
+  "Instrumental music track. Genre: ambient techno. Scene: A softly lit indoor workspace scene: a person crouches low in the foreground, framed by a tall blue event banner that reads like a vertical wall of ambition. The light is flat and cool, bouncing off white walls and tabletops, while cables and edges of furniture create shallow spatial depth—everything feels close, practical, and slightly improvised.. Vibe: fluorescent-clean, cable-tangled, poster-blue urgency, dry-air focus. Setting: null indoor. Sounds like: Like a tight loop of electronic hum under a held breath—punctuated by sudden, precise clicks that feel like ideas snapping into place.. Intensely surging, tense and focused mood with a warm and earthy, vivid tonal palette, techno-inspired, tight, mechanical textures, and flowing, melodic phrases. Instruments: analog synth, digital percussion, glitchy sound effects. Timbre: cold digital textures, precise metallic timbres, faint electronic hums. Harmonic feel: suspenseful, tense. Dynamic shape: steady build with subtle variations, occasional sharp accents. Drawing from: electronic hum, clicks, faint buzzing, keyboard clacks, tapping cables. Make it musically engaging with clear rhythm and forward momentum. 120 BPM, in E minor, medium tempo, medium density, 18 seconds long. Instrumental only, no vocals, no lyrics."
+
+================================================================================
+ STEP 8: ELEVENLABS COMPOSITION PLAN (/v1/music/plan)
+================================================================================
+
+Request payload:
+{
+  "prompt": "Instrumental music track. Genre: ambient techno. Scene: A softly lit indoor workspace scene: a person crouches low in the foreground, framed by a tall blue event banner that reads like a vertical wall of ambition. The light is flat and cool, bouncing off white walls and tabletops, while cables and edges of furniture create shallow spatial depth\u2014everything feels close, practical, and slightly improvised.. Vibe: fluorescent-clean, cable-tangled, poster-blue urgency, dry-air focus. Setting: null indoor. Sounds like: Like a tight loop of electronic hum under a held breath\u2014punctuated by sudden, precise clicks that feel like ideas snapping into place.. Intensely surging, tense and focused mood with a warm and earthy, vivid tonal palette, techno-inspired, tight, mechanical textures, and flowing, melodic phrases. Instruments: analog synth, digital percussion, glitchy sound effects. Timbre: cold digital textures, precise metallic timbres, faint electronic hums. Harmonic feel: suspenseful, tense. Dynamic shape: steady build with subtle variations, occasional sharp accents. Drawing from: electronic hum, clicks, faint buzzing, keyboard clacks, tapping cables. Make it musically engaging with clear rhythm and forward momentum. 120 BPM, in E minor, medium tempo, medium density, 18 seconds long. Instrumental only, no vocals, no lyrics.",
+  "music_length_ms": 18000,
+  "prompt_influence": 0.85,
+  "force_instrumental": true
+}
+
+Response: composition_plan JSON (opaque, passed to next step)
+
+================================================================================
+ STEP 9: ELEVENLABS AUDIO GENERATION (/v1/music)
+================================================================================
+
+Request: { composition_plan: <from previous step>, output_format: "mp3" }
+
+Output: 6db2cdbf03b0.mp3
+Saved to: backend/audio_files/6db2cdbf03b0.mp3
+
+================================================================================
+  TRACE COMPLETE — 6db2cdbf03b0.mp3
+================================================================================

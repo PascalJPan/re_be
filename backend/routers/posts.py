@@ -333,14 +333,22 @@ async def feed(page: int = Query(1, ge=1), per_page: int = Query(20, ge=1, le=10
     rows = await db.execute_fetchall(
         """SELECT p.id, u.username, p.audio_filename, p.color_hex, p.created_at,
            (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count,
-           p.status
+           p.status, p.structured_object
            FROM posts p JOIN users u ON p.user_id = u.id
            ORDER BY p.created_at DESC LIMIT ? OFFSET ?""",
         (per_page, offset),
     )
 
-    posts = [
-        PostSummary(
+    posts = []
+    for r in rows:
+        bpm = None
+        so_raw = r[7]
+        if so_raw:
+            try:
+                bpm = json.loads(so_raw).get("bpm")
+            except (json.JSONDecodeError, TypeError):
+                pass
+        posts.append(PostSummary(
             id=r[0],
             username=r[1],
             image_url=f"api/posts/{r[0]}/image",
@@ -349,10 +357,54 @@ async def feed(page: int = Query(1, ge=1), per_page: int = Query(20, ge=1, le=10
             created_at=r[4],
             comment_count=r[5],
             status=r[6],
-        )
-        for r in rows
-    ]
+            bpm=bpm,
+        ))
     return FeedResponse(posts=posts, total=total, page=page, pages=pages)
+
+
+@router.get("/api/posts/random", response_model=PostSummary)
+async def random_post(exclude: str = Query(None)):
+    db = get_db()
+    if exclude:
+        rows = await db.execute_fetchall(
+            """SELECT p.id, u.username, p.audio_filename, p.color_hex, p.created_at,
+               (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count,
+               p.status, p.structured_object
+               FROM posts p JOIN users u ON p.user_id = u.id
+               WHERE p.status = 'ready' AND p.id != ?
+               ORDER BY RANDOM() LIMIT 1""",
+            (exclude,),
+        )
+    else:
+        rows = await db.execute_fetchall(
+            """SELECT p.id, u.username, p.audio_filename, p.color_hex, p.created_at,
+               (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count,
+               p.status, p.structured_object
+               FROM posts p JOIN users u ON p.user_id = u.id
+               WHERE p.status = 'ready'
+               ORDER BY RANDOM() LIMIT 1""",
+        )
+    if not rows:
+        raise HTTPException(status_code=404, detail="No posts available")
+    r = rows[0]
+    bpm = None
+    so_raw = r[7]
+    if so_raw:
+        try:
+            bpm = json.loads(so_raw).get("bpm")
+        except (json.JSONDecodeError, TypeError):
+            pass
+    return PostSummary(
+        id=r[0],
+        username=r[1],
+        image_url=f"api/posts/{r[0]}/image",
+        audio_url=f"api/audio/{r[2]}" if r[2] else "",
+        color_hex=r[3],
+        created_at=r[4],
+        comment_count=r[5],
+        status=r[6],
+        bpm=bpm,
+    )
 
 
 @router.get("/api/posts/{post_id}", response_model=PostDetail)
@@ -393,7 +445,7 @@ async def get_post(post_id: str):
     comment_rows = await db.execute_fetchall(
         """SELECT c.id, u.username, c.audio_filename, c.color_hex,
            c.structured_object, c.image_analysis, c.squiggle_features,
-           c.compiled_prompt, c.created_at
+           c.compiled_prompt, c.created_at, c.status
            FROM comments c JOIN users u ON c.user_id = u.id
            WHERE c.post_id = ?
            ORDER BY c.created_at ASC""",
@@ -406,20 +458,31 @@ async def get_post(post_id: str):
         except (json.JSONDecodeError, TypeError, KeyError) as e:
             raise HTTPException(status_code=500, detail=f"Corrupt {label} data: {e}")
 
-    comments = [
-        CommentDetail(
-            id=cr[0],
-            username=cr[1],
-            audio_url=f"api/audio/{cr[2]}",
-            color_hex=cr[3],
-            structured_object=_parse_json(cr[4], AudioStructuredObject, "comment structured_object"),
-            image_analysis=_parse_json(cr[5], ImageAnalysis, "comment image_analysis"),
-            squiggle_features=_parse_json(cr[6], SquiggleFeatures, "comment squiggle_features"),
-            compiled_prompt=cr[7],
-            created_at=cr[8],
-        )
-        for cr in comment_rows
-    ]
+    comments = []
+    for cr in comment_rows:
+        c_status = cr[9]
+        if c_status != "ready":
+            comments.append(CommentDetail(
+                id=cr[0],
+                username=cr[1],
+                audio_url="",
+                color_hex=cr[3],
+                created_at=cr[8],
+                status=c_status,
+            ))
+        else:
+            comments.append(CommentDetail(
+                id=cr[0],
+                username=cr[1],
+                audio_url=f"api/audio/{cr[2]}",
+                color_hex=cr[3],
+                structured_object=_parse_json(cr[4], AudioStructuredObject, "comment structured_object"),
+                image_analysis=_parse_json(cr[5], ImageAnalysis, "comment image_analysis"),
+                squiggle_features=_parse_json(cr[6], SquiggleFeatures, "comment squiggle_features"),
+                compiled_prompt=cr[7],
+                created_at=cr[8],
+                status="ready",
+            ))
 
     enhancement_raw = r[8]
     enhancement = None
@@ -510,7 +573,7 @@ async def recreate_post(post_id: str, user: dict = Depends(get_current_user)):
     db = get_db()
     rows = await db.execute_fetchall(
         """SELECT user_id, original_image_data, image_data, squiggle_points,
-           color_hex, audio_filename
+           color_hex, audio_filename, status
            FROM posts WHERE id = ?""",
         (post_id,),
     )
@@ -520,6 +583,8 @@ async def recreate_post(post_id: str, user: dict = Depends(get_current_user)):
     row = rows[0]
     if row[0] != user["id"]:
         raise HTTPException(status_code=403, detail="Not your post")
+    if row[6] == "generating":
+        raise HTTPException(status_code=409, detail="Post is still generating")
 
     # Use original image if available, fallback to morphed for old posts
     original_image = row[1] if row[1] else row[2]

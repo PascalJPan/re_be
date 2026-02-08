@@ -58,6 +58,10 @@ a { color: var(--text); text-decoration: none; }
 .nav-brand:hover { opacity: 0.7; }
 .nav-logo {
   display: block;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
 .nav-actions {
@@ -909,10 +913,119 @@ button.primary:hover { background: #444; }
   transform: translate(-50%, 50%);
 }
 
+/* Comment shimmer placeholder */
+.comment-shimmer-bar {
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+}
+
+.comment-shimmer-bar .generating-label {
+  font-size: 0.7rem;
+}
+
 /* Clickable toast */
 .toast-clickable {
   cursor: pointer;
   pointer-events: auto;
+}
+
+/* ==================== Username popup ==================== */
+.username-popup-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.username-popup {
+  background: var(--surface);
+  border-radius: 16px;
+  padding: 2rem 2rem 1.5rem;
+  box-shadow: var(--shadow-hover);
+  text-align: center;
+  width: 280px;
+}
+
+.username-popup h2 {
+  font-size: 1.1rem;
+  font-weight: 400;
+  color: var(--text-dim);
+  margin-bottom: 1.25rem;
+  letter-spacing: 0.05em;
+}
+
+.username-popup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.username-popup-input {
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface2);
+  color: var(--text);
+  font-size: 0.95rem;
+  outline: none;
+  text-align: center;
+}
+.username-popup-input:focus { border-color: var(--text-dim); }
+
+.username-popup-hint {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  line-height: 1.4;
+  margin: -0.15rem 0 0.1rem;
+}
+
+.username-popup-btn {
+  padding: 0.6rem 1.4rem;
+}
+
+/* ==================== Feed particles ==================== */
+#feed-particles-back, #feed-particles-front {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+#feed-particles-back  { z-index: 0; }
+#feed-particles-front { z-index: 2; }
+
+/* ==================== Swipe transitions ==================== */
+.post-card-wrapper.swipe-out-left {
+  transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+  transform: translateX(-110%);
+  opacity: 0;
+}
+.post-card-wrapper.swipe-out-right {
+  transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+  transform: translateX(110%);
+  opacity: 0;
+}
+.post-card-wrapper.swipe-in-left {
+  transform: translateX(-110%);
+  opacity: 0;
+}
+.post-card-wrapper.swipe-in-right {
+  transform: translateX(110%);
+  opacity: 0;
+}
+.post-card-wrapper.swipe-in-active {
+  transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+  transform: translateX(0);
+  opacity: 1;
 }
 
 /* ==================== Utility ==================== */
