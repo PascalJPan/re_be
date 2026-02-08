@@ -8,6 +8,10 @@
   <em>Every image has a sound. Every gesture has a rhythm. Every moment deserves a soundtrack.</em>
 </p>
 
+Test the working and deployed platform here:
+https://pascalpan.com/creations/re_be/
+(just leave the password empty and choose any name;))
+
 ---
 
 ## The Vision
