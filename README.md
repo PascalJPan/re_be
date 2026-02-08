@@ -14,25 +14,25 @@
 
 There's music hiding in every moment — the amber warmth of a sunset photograph, the chaotic energy of a crowded street, the quiet stillness of an empty room. We just don't have the tools to hear it yet.
 
-**re:be** is a synesthetic engine that translates visual moments into sound. Upload any image, draw a gesture across it, and watch as a 6-stage AI pipeline decodes the scene's hidden musicality — its mood, its rhythm, its texture — and composes an original soundtrack in seconds. The gesture isn't decoration; it's a conductor's baton, shaping tempo, energy, and density through speed, scale, and direction.
-
-But re:be isn't a one-shot generator. It's a **social instrument**. Every post becomes a musical thread. Comments inherit the parent's BPM, key, and duration, then choose to *mirror*, *vary*, or *contrast* — creating a creative flywheel where music responds to music and audiences shape the composition together. This is the multimodal-to-music backbone: not generating audio in isolation, but building infrastructure where visual input, gestural expression, and AI composition form a living, collaborative loop.
-
----
-
-## Demo
-
 <p align="center">
   <em>Creation flow — capture, gesture, generate</em>
 </p>
 
 <p align="center">
+  <img src="assets/feed.png" alt="Feed screenshot" width="600" />
+  <br />
   <em>Feed — color-tinted cards with waveform players and BPM-synced particles</em>
 </p>
 
 <p align="center">
-  <em>Post detail — synchronized multi-track playback with comment threads</em>
+  <img src="assets/profil.png" alt="Profile screenshot" width="600" />
+  <br />
+  <em>Profile — user profile with paginated posts</em>
 </p>
+
+**re:be** is a synthetic engine that translates visual moments into sound. Upload any image, draw a gesture across it, and watch as a 6-stage AI pipeline decodes the scene's hidden musicality — its mood, its rhythm, its texture — and composes an original soundtrack in seconds. The gesture isn't decoration; it's a conductor's baton, shaping tempo, energy, and density through speed, scale, and direction.
+
+But re:be isn't a one-shot generator. It's a **social instrument**. Every post becomes a musical thread. Comments inherit the parent's BPM, key, and duration, then choose to *mirror*, *vary*, or *contrast* — creating a creative flywheel where music responds to music and audiences shape the composition together. This is the multimodal-to-music backbone: not generating audio in isolation, but building infrastructure where visual input, gestural expression, and AI composition form a living, collaborative loop.
 
 ---
 
